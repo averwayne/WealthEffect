@@ -14,16 +14,7 @@
   --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --ease:cubic-bezier(.2,.7,.1,1);
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#141414; --surface:#141414; --hover:#1C1C1C; --fg:#E9E9E9; --fg2:#CDCDCD; --muted:#8E8E8E;
-  --line:rgba(233,233,233,.55); --line2:rgba(233,233,233,.7); --hair:rgba(233,233,233,.1); --inv:#141414;
-  --band:#080808; --bandfg:#E9E9E9; --bandmuted:#7C7C7C;
-  --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#141414; --surface:#141414; --hover:#1C1C1C; --fg:#E9E9E9; --fg2:#CDCDCD; --muted:#8E8E8E;
-  --line:rgba(233,233,233,.55); --line2:rgba(233,233,233,.7); --hair:rgba(233,233,233,.1); --inv:#141414;
-  --band:#080808; --bandfg:#E9E9E9; --bandmuted:#7C7C7C;
-  --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}
+:root,:root[data-theme="dark"]{color-scheme:light}
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:64px}
