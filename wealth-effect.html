@@ -1,0 +1,1331 @@
+<title>Wealth Effect</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: mission-control ledger. Hairline grid, mono telemetry labels, one oversized grotesk number per view. Grayscale UI; color lives only inside charts. */
+:root{
+  --bg:#F1F2F2; --surface:#F8F8F8; --fg:#0C0D0E; --fg2:#3B3E42; --muted:#767B81;
+  --line:rgba(12,13,14,.11); --line2:rgba(12,13,14,.3); --grid:rgba(12,13,14,.05); --inv:#F8F8F8;
+  --c1:#2D62EE; --c2:#0A9682; --c3:#D64B2C; --c4:#C2840A; --c5:#7655D4;
+  --display:"Geist","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#090A0B; --surface:#0F1112; --fg:#ECEDEE; --fg2:#BBBFC3; --muted:#82888E;
+  --line:rgba(236,237,238,.1); --line2:rgba(236,237,238,.3); --grid:rgba(236,237,238,.04); --inv:#090A0B;
+  --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#090A0B; --surface:#0F1112; --fg:#ECEDEE; --fg2:#BBBFC3; --muted:#82888E;
+  --line:rgba(236,237,238,.1); --line2:rgba(236,237,238,.3); --grid:rgba(236,237,238,.04); --inv:#090A0B;
+  --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+::selection{background:var(--fg);color:var(--inv)}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono,.lbl{font-family:var(--mono)}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.03em}
+h2{font-size:clamp(30px,4.4vw,52px);line-height:1.02}
+h3{font-size:18px;letter-spacing:-.01em;font-weight:500}
+p{margin:0}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
+
+/* ——— top bar ——— */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:20px;height:56px}
+.logo{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo i{width:10px;height:10px;border:1px solid var(--fg);display:inline-block;position:relative}
+.logo i::after{content:"";position:absolute;inset:2px;background:var(--fg);animation:blink 2.4s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:8px 10px;white-space:nowrap;transition:color .2s}
+.nav a:hover,.nav a.on{color:var(--fg)}
+.nav a.on::before{content:"■ ";font-size:8px;vertical-align:1px}
+.lvchip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line2);padding:6px 10px;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none}
+.lvchip b{font-weight:500}
+@media (max-width:720px){.lvchip .lvname{display:none}.logo span{display:none}}
+
+/* ——— buttons & inputs ——— */
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;border:1px solid var(--fg);background:linear-gradient(var(--fg),var(--fg)) no-repeat left/0% 100%;color:var(--fg);padding:11px 16px;cursor:pointer;border-radius:0;transition:background-size .35s var(--ease),color .35s var(--ease);display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.btn:hover{background-size:100% 100%;color:var(--inv)}
+.btn.solid{background:var(--fg);color:var(--inv)}
+.btn.solid:hover{background:transparent;color:var(--fg)}
+.btn.ghost{border-color:var(--line2)}
+.btn.sm{padding:7px 10px;font-size:10px}
+.btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+.btn .arr{transition:transform .35s var(--ease)}
+.btn:hover .arr{transform:translateX(4px)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.in{background:transparent;border:1px solid var(--line2);padding:9px 10px;border-radius:0;width:100%;min-width:0;font-variant-numeric:tabular-nums}
+.in:focus{border-color:var(--fg);outline:none}
+select.in{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 13px) 50%,calc(100% - 9px) 50%;background-size:4px 4px;background-repeat:no-repeat;padding-right:24px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line2)}
+input[type=range]::-moz-range-track{height:1px;background:var(--line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--fg);margin-top:-6px;border:0;border-radius:0;transition:transform .2s}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--fg);border:0;border-radius:0}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.4) rotate(45deg)}
+
+/* ——— sections ——— */
+section{border-top:1px solid var(--line);padding-block:72px}
+.shead{display:grid;grid-template-columns:220px 1fr;gap:24px;margin-bottom:40px}
+.shead .lbl{padding-top:10px}
+.shead p.lede{color:var(--fg2);max-width:62ch;margin-top:14px;font-size:16px}
+@media (max-width:820px){.shead{grid-template-columns:1fr;gap:10px}section{padding-block:52px}}
+
+.panel{position:relative;border:1px solid var(--line);background:var(--surface)}
+.panel.corners::before,.panel.corners::after{content:"";position:absolute;width:9px;height:9px;border:1px solid var(--fg);pointer-events:none}
+.panel.corners::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.panel.corners::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line2)}
+.seg button{background:none;border:0;font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:6px 10px;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--fg);color:var(--inv)}
+
+/* ——— hero ——— */
+.hero{border-top:0;padding-block:40px 56px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;mask-image:linear-gradient(180deg,#000 40%,transparent)}
+.hero .wrap{position:relative}
+.telemetry{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.telemetry span{white-space:nowrap}
+.heroGrid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:28px;align-items:end}
+@media (max-width:960px){.heroGrid{grid-template-columns:1fr}}
+.big{font-size:clamp(54px,10.5vw,148px);font-weight:300;letter-spacing:-.055em;line-height:.9;font-variant-numeric:tabular-nums;white-space:nowrap}
+.big .cur{color:var(--muted);font-weight:300}
+.deltas{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px}
+.delta{font-family:var(--mono);font-size:12px;display:flex;gap:8px;align-items:baseline}
+.delta b{font-weight:500;color:var(--fg)}
+.readouts{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.ro{padding:14px 14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.ro .v{font-size:22px;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.meter{height:3px;background:var(--line);margin-top:10px;position:relative;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--fg);transition:width .9s var(--ease)}
+.example{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line2);padding:10px 14px;margin-bottom:28px;font-size:14px;color:var(--fg2)}
+.example .lbl{color:var(--fg)}
+.example[hidden]{display:none!important}
+
+/* ——— charts ——— */
+.chart{position:relative;width:100%;touch-action:pan-y}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart .axis{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .gl0{stroke:var(--line2)}
+.chart .draw{animation:draw 1.6s var(--ease) both}
+.chart .fade{animation:fadein 1.2s .4s var(--ease) both}
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+@keyframes fadein{from{opacity:0}}
+.tip{position:absolute;top:8px;pointer-events:none;background:var(--fg);color:var(--inv);font-family:var(--mono);font-size:11px;padding:8px 10px;min-width:150px;z-index:3;transition:opacity .15s;white-space:nowrap}
+.tip .t{opacity:.65;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase;font-size:10px}
+.tip .r{display:flex;justify-content:space-between;gap:14px}
+.tip .sw{display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap}
+.legend button{background:none;border:0;padding:0;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg2);display:flex;align-items:center;gap:7px}
+.legend button.off{opacity:.35}
+.legend i{width:14px;height:2px;display:inline-block}
+.legend i.dash{background:none!important;border-top:2px dashed}
+
+/* ——— ledger ——— */
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media (max-width:900px){.ledger{grid-template-columns:1fr}}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 32px;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line);align-items:center}
+.row .in{border-color:transparent;padding:7px 6px}
+.row .in:hover{border-color:var(--line)}
+.row .in:focus{border-color:var(--fg)}
+.row .val{text-align:right}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:14px;width:32px;height:32px}
+.x:hover{color:var(--fg)}
+.tot{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;gap:12px;flex-wrap:wrap}
+.tot .v{font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.row{grid-template-columns:minmax(0,1fr) minmax(0,.9fr) 28px;padding:8px 10px}.row .cat{grid-column:1/3;order:3}.row .x{grid-row:1/3;grid-column:3}}
+.alloc{display:flex;height:10px;margin:0 16px;gap:2px}
+.alloc i{display:block;height:100%;transition:flex-grow .6s var(--ease)}
+.allocKey{display:flex;gap:14px;flex-wrap:wrap;padding:12px 16px 16px;font-family:var(--mono);font-size:11px;color:var(--fg2)}
+.allocKey span{display:flex;align-items:center;gap:6px}
+.allocKey i{width:8px;height:8px;display:inline-block}
+.profile{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:16px;align-items:end;margin-top:24px;padding:16px;border:1px solid var(--line)}
+@media (max-width:760px){.profile{grid-template-columns:1fr 1fr}.profile .btn{grid-column:1/-1;justify-content:center}}
+
+/* ——— plan ——— */
+.plan{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px}
+@media (max-width:980px){.plan{grid-template-columns:1fr}}
+.ctrls{display:flex;flex-direction:column;gap:18px;padding:20px}
+.ctrl .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ctrl .top input{width:120px;text-align:right;background:transparent;border:0;border-bottom:1px solid var(--line2);padding:2px 0;font-size:18px;letter-spacing:-.01em;border-radius:0}
+.ctrl .top input:focus{outline:none;border-color:var(--fg)}
+.chk{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;margin-top:6px}
+.chk input{accent-color:var(--fg)}
+.outs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line)}
+.outs .ro{border-bottom:0}
+.outs .ro:last-child{border-right:0}
+@media (max-width:640px){.outs{grid-template-columns:1fr 1fr}.outs .ro{border-bottom:1px solid var(--line)}}
+.callout{padding:16px 20px;border-top:1px solid var(--line);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--fg2)}
+.callout b{color:var(--fg);font-weight:500}
+
+/* ——— power ——— */
+.power{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+@media (max-width:980px){.power{grid-template-columns:1fr}}
+.sentences{display:flex;flex-direction:column}
+.sentences p{padding:16px 20px;border-bottom:1px solid var(--line);font-size:16px;color:var(--fg2)}
+.sentences p:last-child{border-bottom:0}
+.sentences b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.units{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);margin-top:24px}
+.units .ro{border-bottom:0}
+.units .ro:last-child{border-right:0}
+@media (max-width:860px){.units{grid-template-columns:repeat(2,minmax(0,1fr))}.units .ro{border-bottom:1px solid var(--line)}}
+.shop{margin-top:40px}
+.shopHead{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.checker{display:flex;gap:8px;align-items:center}
+.checker .in{width:150px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.item{padding:16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;min-width:0;transition:background .25s}
+.item:hover{background:var(--surface)}
+.item .nm{font-size:16px;letter-spacing:-.01em}
+.item .pr{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.item .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto}
+.item .why{font-family:var(--mono);font-size:11px;color:var(--fg2)}
+.item.locked .nm{color:var(--muted)}
+.pill{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:3px 7px;border:1px solid var(--fg);white-space:nowrap}
+.pill.t0{background:var(--fg);color:var(--inv)}
+.pill.t2{border-style:dashed}
+.pill.t3{border-color:var(--line2);color:var(--muted)}
+.item .meter{margin-top:0}
+.item.custom{background:var(--surface)}
+.src{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:12px;max-width:90ch}
+
+/* ——— milestones ——— */
+.ms{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+@media (max-width:980px){.ms{grid-template-columns:1fr}}
+.orbitWrap{position:relative;aspect-ratio:1/1;max-width:100%}
+.orbitWrap canvas{width:100%;height:100%;display:block}
+.orbitCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:30%}
+.orbitCenter .v{font-size:clamp(20px,3vw,30px);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.orbitCenter .n{font-size:13px;color:var(--fg2);margin-top:4px}
+.mlist{display:flex;flex-direction:column}
+.mrow{display:grid;grid-template-columns:14px minmax(0,1fr) auto 26px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);cursor:default;transition:background .2s}
+.mrow:hover,.mrow.hl{background:var(--bg)}
+.mrow .sw{width:10px;height:10px}
+.mrow .nm{font-size:14px;min-width:0}
+.mrow .nm small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.mrow .pc{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap}
+.mrow.done .nm{text-decoration:line-through;text-decoration-color:var(--line2)}
+.mrow .bar2{grid-column:2/4;height:2px;background:var(--line);position:relative}
+.mrow .bar2 i{position:absolute;inset:0 auto 0 0;transition:width .8s var(--ease)}
+.addm{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;padding:14px 16px;align-items:end}
+@media (max-width:560px){.addm{grid-template-columns:1fr 1fr}.addm .field:first-child{grid-column:1/-1}.addm .btn{grid-column:1/-1;justify-content:center}}
+.level{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding:20px;border-bottom:1px solid var(--line)}
+.lvnum{font-size:64px;font-weight:300;letter-spacing:-.05em;line-height:.9;font-variant-numeric:tabular-nums}
+.xpbar{height:6px;border:1px solid var(--line2);margin-top:10px;position:relative}
+.xpbar i{position:absolute;inset:0 auto 0 0;background:var(--fg);transition:width 1s var(--ease)}
+.ladder{display:flex;gap:4px;margin-top:10px}
+.ladder span{flex:1;height:4px;background:var(--line)}
+.ladder span.on{background:var(--fg)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0;border-top:1px solid var(--line)}
+.badge{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;min-width:0}
+.badge .ic{width:26px;height:26px;flex:none;border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--muted);transform:rotate(45deg)}
+.badge .ic span{transform:rotate(-45deg)}
+.badge.on .ic{background:var(--fg);border-color:var(--fg);color:var(--inv)}
+.badge .bn{font-size:13px;line-height:1.3}
+.badge .bd{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
+.badge:not(.on) .bn{color:var(--muted)}
+
+/* ——— learn ——— */
+.learnTop{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{background:none;border:1px solid var(--line2);font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:6px 10px;cursor:pointer;color:var(--fg2)}
+.chips button.on{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+.search{display:flex;gap:8px;align-items:center;flex:1;min-width:220px;max-width:420px}
+.terms{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.term{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;min-width:0;transition:background .2s;text-align:left;background:none;border-top:0;border-left:0;font:inherit;color:inherit}
+.term:hover{background:var(--surface)}
+.term .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.term .tn{font-size:19px;letter-spacing:-.02em}
+.term .def{color:var(--fg2);font-size:14px}
+.term .ex{display:none;font-size:13px;color:var(--fg2);border-left:1px solid var(--fg);padding-left:10px;margin-top:4px}
+.term.open .ex{display:block}
+.term .lrn{display:none;margin-top:6px}
+.term.open .lrn{display:flex}
+.term .mk{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.term.learned .mk{color:var(--fg)}
+.recall{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;margin-bottom:28px}
+@media (max-width:900px){.recall{grid-template-columns:1fr}}
+.card{perspective:1200px;min-height:240px;cursor:pointer;border:0;background:none;padding:0;width:100%;text-align:left}
+.card .in2{position:relative;width:100%;height:100%;min-height:240px;transition:transform .7s var(--ease);transform-style:preserve-3d}
+.card.flip .in2{transform:rotateY(180deg)}
+.card .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.card .back{transform:rotateY(180deg)}
+.card .q{font-size:clamp(28px,4vw,44px);letter-spacing:-.035em;line-height:1.05}
+.card .a{font-size:16px;color:var(--fg2);max-width:60ch}
+.recallSide{display:flex;flex-direction:column;gap:12px;justify-content:space-between;border:1px solid var(--line);padding:20px}
+.boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.boxes>div{border:1px solid var(--line);padding:8px;text-align:center}
+.boxes .v{font-size:20px;font-variant-numeric:tabular-nums}
+
+/* ——— agent ——— */
+.agent{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
+@media (max-width:900px){.agent{grid-template-columns:1fr}}
+.log{min-height:300px;max-height:560px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:18px}
+.msg{max-width:72ch}
+.msg .who{margin-bottom:6px}
+.msg.user{align-self:flex-end;text-align:right}
+.msg.user .body{background:var(--fg);color:var(--inv);padding:10px 14px;display:inline-block;text-align:left}
+.msg .body{font-size:15px;color:var(--fg)}
+.msg .body p+p,.msg .body ul+p,.msg .body p+ul{margin-top:10px}
+.msg .body ul{margin:8px 0 0;padding-left:18px}
+.msg .body li{margin:3px 0}
+.msg .act{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px dashed var(--line2);padding:6px 10px;margin-top:8px;display:inline-block}
+.compose{display:flex;gap:8px;padding:14px;border-top:1px solid var(--line)}
+.compose textarea{flex:1;resize:none;min-height:44px;max-height:140px}
+.sugs{display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
+.sugs button{background:none;border:0;border-bottom:1px solid var(--line);text-align:left;padding:14px 16px;cursor:pointer;font-size:14px;color:var(--fg2);display:flex;justify-content:space-between;gap:10px;transition:background .2s,color .2s}
+.sugs button:last-child{border-bottom:0}
+.sugs button:hover{background:var(--surface);color:var(--fg)}
+.cursor::after{content:"▍";animation:blink 1s steps(1) infinite;margin-left:2px}
+
+/* ——— footer / toast ——— */
+footer{border-top:1px solid var(--line);padding-block:28px 40px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:40;pointer-events:none;max-width:calc(100% - 32px)}
+.toast{background:var(--fg);color:var(--inv);padding:12px 16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;animation:tin .5s var(--ease) both;display:flex;gap:12px;align-items:center}
+.toast .xp{border:1px solid var(--inv);padding:2px 6px;font-size:10px}
+@keyframes tin{from{transform:translateY(16px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="#overview"><i></i><span>Wealth&nbsp;Effect</span></a>
+    <nav class="nav" id="nav">
+      <a href="#overview">Net worth</a>
+      <a href="#ledger">Ledger</a>
+      <a href="#plan">Plan</a>
+      <a href="#power">Purchasing power</a>
+      <a href="#milestones">Milestones</a>
+      <a href="#learn">Learn</a>
+      <a href="#agent">Agent</a>
+    </nav>
+    <a class="lvchip" href="#milestones" id="lvchip"><b>LV <span id="lvN">1</span></b><span class="lvname" id="lvName">Ground</span></a>
+  </div>
+</header>
+
+<main>
+<!-- ═════════ OVERVIEW ═════════ -->
+<section class="hero" id="overview">
+  <div class="wrap">
+    <div class="telemetry lbl">
+      <span id="tmDate">—</span>
+      <span id="tmSync">Saved on this device</span>
+      <span id="tmXY">X 0000 · Y 0000</span>
+    </div>
+    <div class="example" id="exampleBanner">
+      <span class="lbl">[ Example numbers ]</span>
+      <span style="flex:1;min-width:200px">Everything below runs on a sample 27-year-old's money. Swap in your own and the whole page recalculates.</span>
+      <button class="btn sm solid" id="startFresh">Start with my numbers <span class="arr">→</span></button>
+      <button class="btn sm ghost" id="keepExample">Edit the example</button>
+    </div>
+    <div class="heroGrid">
+      <div style="min-width:0">
+        <div class="lbl scr" style="margin-bottom:14px">[ Net worth ]</div>
+        <div class="big" id="heroNW"><span class="cur">$</span>0</div>
+        <div class="deltas" id="heroDeltas"></div>
+      </div>
+      <div class="readouts" id="heroRO"></div>
+    </div>
+    <div class="panel corners" style="margin-top:36px">
+      <div class="phead">
+        <div class="legend" id="nwLegend"></div>
+        <div class="seg" id="nwRange"><button data-r="6">6M</button><button data-r="12">1Y</button><button data-r="0" class="on">All</button></div>
+      </div>
+      <div class="chart" id="nwChart" style="padding:12px 8px 6px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ LEDGER ═════════ -->
+<section id="ledger">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Ledger ]</div>
+      <div>
+        <h2 class="scr">What you own, minus what you owe.</h2>
+        <p class="lede">List every account and every debt. Log it once a month: each log becomes a point on your chart, builds your streak and earns XP.</p>
+      </div>
+    </div>
+    <div class="ledger">
+      <div class="panel">
+        <div class="phead"><span class="lbl">Assets</span><button class="btn sm ghost" id="addAsset">+ Add asset</button></div>
+        <div class="rows" id="assetRows"></div>
+        <div class="tot"><span class="lbl">Total assets</span><span class="v" id="totA">$0</span></div>
+        <div class="alloc" id="alloc"></div>
+        <div class="allocKey" id="allocKey"></div>
+      </div>
+      <div class="panel">
+        <div class="phead"><span class="lbl">Liabilities</span><button class="btn sm ghost" id="addLiab">+ Add debt</button></div>
+        <div class="rows" id="liabRows"></div>
+        <div class="tot"><span class="lbl">Total liabilities</span><span class="v" id="totL">$0</span></div>
+        <div class="tot" style="border-top:1px solid var(--line)">
+          <div><div class="lbl">Net worth today</div><div class="v" id="totNW" style="font-size:32px">$0</div></div>
+          <button class="btn solid" id="logBtn">Log this month <span class="arr">→</span></button>
+        </div>
+        <div class="tot" style="padding-top:0"><span class="mono" style="font-size:11px;color:var(--muted)" id="logNote"></span></div>
+      </div>
+    </div>
+    <div class="profile">
+      <div class="field"><label class="lbl" for="pAge">Your age</label><input class="in" id="pAge" type="number" min="14" max="100" inputmode="numeric"></div>
+      <div class="field"><label class="lbl" for="pExp">Monthly spending</label><input class="in" id="pExp" type="number" min="0" step="50" inputmode="numeric"></div>
+      <div class="field"><label class="lbl" for="pSave">Monthly saving + investing</label><input class="in" id="pSave" type="number" min="0" step="50" inputmode="numeric"></div>
+      <button class="btn ghost" id="resetAll">Reset everything</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ PLAN ═════════ -->
+<section id="plan">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Flight plan ]</div>
+      <div>
+        <h2 class="scr">Set a goal. See the year you get there.</h2>
+        <p class="lede">Drag the controls. Three paths show a cautious, expected and strong market. Switch to today's dollars to see what the money will actually buy.</p>
+      </div>
+    </div>
+    <div class="plan">
+      <div class="panel ctrls corners">
+        <div class="ctrl"><div class="top"><label class="lbl" for="cStart">Starting amount</label><input id="cStart" type="number" inputmode="numeric"></div>
+          <label class="chk" for="cLink"><input type="checkbox" id="cLink" checked> Use my current net worth</label></div>
+        <div class="ctrl"><div class="top"><label class="lbl" for="cMonthlyN">Monthly investing</label><input id="cMonthlyN" type="number" inputmode="numeric"></div><input type="range" id="cMonthly" min="0" max="10000" step="50"></div>
+        <div class="ctrl"><div class="top"><label class="lbl" for="cRateN">Annual return %</label><input id="cRateN" type="number" step="0.5" inputmode="decimal"></div><input type="range" id="cRate" min="0" max="12" step="0.5"></div>
+        <div class="ctrl"><div class="top"><label class="lbl" for="cInflN">Inflation %</label><input id="cInflN" type="number" step="0.25" inputmode="decimal"></div><input type="range" id="cInfl" min="0" max="8" step="0.25"></div>
+        <div class="ctrl"><div class="top"><label class="lbl" for="cYearsN">Years</label><input id="cYearsN" type="number" inputmode="numeric"></div><input type="range" id="cYears" min="1" max="50" step="1"></div>
+        <div class="ctrl"><div class="top"><label class="lbl" for="cGoal">Goal</label><input id="cGoal" type="number" step="1000" inputmode="numeric"></div>
+          <div class="chips" style="margin-top:8px" id="goalPresets"></div></div>
+        <button class="btn solid" id="saveGoal" style="justify-content:center">Save goal as milestone <span class="arr">→</span></button>
+      </div>
+      <div class="panel" style="min-width:0">
+        <div class="phead">
+          <div class="legend" id="pjLegend"></div>
+          <div class="seg" id="pjMode"><button data-m="nom" class="on">Future dollars</button><button data-m="real">Today's dollars</button></div>
+        </div>
+        <div class="chart" id="pjChart" style="padding:12px 8px 6px"></div>
+        <div class="outs" id="pjOuts"></div>
+        <div class="callout" id="pjCallout"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ POWER ═════════ -->
+<section id="power">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Purchasing power ]</div>
+      <div>
+        <h2 class="scr">A dollar is a promise that shrinks.</h2>
+        <p class="lede">Inflation quietly eats cash. Money that grows faster than prices keeps its buying power. Every line below is in today's dollars.</p>
+      </div>
+    </div>
+    <div class="power">
+      <div class="panel corners" style="min-width:0">
+        <div class="phead"><div class="legend" id="ppLegend"></div><span class="lbl">Today's dollars</span></div>
+        <div class="chart" id="ppChart" style="padding:12px 8px 6px"></div>
+      </div>
+      <div class="panel" style="display:flex;flex-direction:column">
+        <div class="ctrls" style="border-bottom:1px solid var(--line)">
+          <div class="ctrl"><div class="top"><label class="lbl" for="ppAmt">Amount</label><input id="ppAmt" type="number" step="500" inputmode="numeric"></div></div>
+          <div class="ctrl"><div class="top"><label class="lbl" for="ppInflN">Inflation %</label><input id="ppInflN" type="number" step="0.25" inputmode="decimal"></div><input type="range" id="ppInfl" min="0" max="10" step="0.25"></div>
+          <div class="ctrl"><div class="top"><label class="lbl" for="ppYearsN">Years</label><input id="ppYearsN" type="number" inputmode="numeric"></div><input type="range" id="ppYears" min="1" max="50"></div>
+        </div>
+        <div class="sentences" id="ppSent"></div>
+      </div>
+    </div>
+    <div class="units" id="units"></div>
+
+    <div class="shop">
+      <div class="shopHead">
+        <div>
+          <div class="lbl scr" style="margin-bottom:10px">[ What your net worth buys ]</div>
+          <h3 style="font-size:24px;letter-spacing:-.02em;font-weight:400">Rated by how much of your net worth each purchase takes.</h3>
+        </div>
+        <div class="checker"><label class="lbl" for="chkPrice">Check a price</label><input class="in" id="chkPrice" type="number" placeholder="$ 0" inputmode="numeric"></div>
+      </div>
+      <div class="items" id="items"></div>
+      <p class="src">Comfortable: under 5% of net worth. Within reach: under 25%. Stretch: under 100%. Prices are approximate US figures from 2025 public data (NAR median existing-home price, Kelley Blue Book average new-car price, College Board in-state tuition, The Knot wedding study, Zillow rent index). "Away" assumes you keep investing your monthly amount at 7%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ MILESTONES ═════════ -->
+<section id="milestones">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Milestones ]</div>
+      <div>
+        <h2 class="scr">Every ring is a goal. Close them all.</h2>
+        <p class="lede">Each orbit is a milestone, and the arc shows how far around you are. Hover or tap a ring to read it. Logging months, closing rings and learning terms all earn XP.</p>
+      </div>
+    </div>
+    <div class="ms">
+      <div class="panel corners" style="padding:16px">
+        <div class="orbitWrap" id="orbitWrap"><canvas id="orbit"></canvas>
+          <div class="orbitCenter"><div class="lbl" id="ocL">Next milestone</div><div class="v" id="ocV">—</div><div class="n" id="ocN"></div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+        <div class="panel">
+          <div class="level">
+            <div class="lvnum" id="lvBig">1</div>
+            <div style="min-width:0">
+              <div class="lbl">Level</div>
+              <div style="font-size:22px;letter-spacing:-.02em" id="lvTitle">Ground</div>
+              <div class="xpbar"><i id="xpFill" style="width:0"></i></div>
+              <div class="mono" style="font-size:11px;color:var(--muted);margin-top:6px" id="xpTxt"></div>
+            </div>
+          </div>
+          <div class="mlist" id="mlist"></div>
+          <form class="addm" id="addM">
+            <div class="field"><label class="lbl" for="mName">New milestone</label><input class="in" id="mName" placeholder="e.g. House down payment" maxlength="60"></div>
+            <div class="field"><label class="lbl" for="mTarget">Target</label><input class="in" id="mTarget" type="number" min="1" placeholder="$" inputmode="numeric"></div>
+            <div class="field"><label class="lbl" for="mKind">Track</label><select class="in" id="mKind"><option value="nw">Net worth</option><option value="cash">Cash</option><option value="invest">Investments</option></select></div>
+            <button class="btn solid" type="submit">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:24px">
+      <div class="phead"><span class="lbl">Badges</span><span class="lbl" id="badgeCount"></span></div>
+      <div class="badges" id="badges"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ LEARN ═════════ -->
+<section id="learn">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Encyclopedia ]</div>
+      <div>
+        <h2 class="scr">The words money people use, in plain English.</h2>
+        <p class="lede">Tap any term to see an example. Use Recall to quiz yourself: terms you know move up a box and come back less often. Terms you miss come back sooner.</p>
+      </div>
+    </div>
+    <div class="recall">
+      <button class="card" id="card" type="button" aria-label="Flip card">
+        <div class="in2">
+          <div class="face front"><span class="lbl" id="cardCat">Recall</span><div class="q" id="cardQ">—</div><span class="lbl">Tap to reveal</span></div>
+          <div class="face back"><span class="lbl" id="cardCat2">Definition</span><div class="a" id="cardA">—</div><span class="lbl">Did you know it?</span></div>
+        </div>
+      </button>
+      <div class="recallSide">
+        <div><div class="lbl" style="margin-bottom:10px">Memory boxes</div>
+          <div class="boxes" id="boxes"></div>
+          <p class="mono" style="font-size:11px;color:var(--muted);margin-top:10px" id="learnCount"></p></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" id="cardAgain" style="flex:1;justify-content:center">Again</button>
+          <button class="btn solid" id="cardGot" style="flex:1;justify-content:center">Got it</button>
+        </div>
+      </div>
+    </div>
+    <div class="learnTop">
+      <div class="chips" id="catChips"></div>
+      <div class="search"><label class="lbl" for="q">Search</label><input class="in" id="q" placeholder="compound, Roth, 4% rule…"></div>
+    </div>
+    <div class="terms" id="terms"></div>
+  </div>
+</section>
+
+<!-- ═════════ AGENT ═════════ -->
+<section id="agent">
+  <div class="wrap">
+    <div class="shead">
+      <div class="lbl scr">[ Planning agent ]</div>
+      <div>
+        <h2 class="scr">Ask anything about your money.</h2>
+        <p class="lede">The agent reads your ledger, plan and milestones each time you ask. It can run projections, add milestones and update your plan for you. It teaches; it is not a licensed advisor.</p>
+      </div>
+    </div>
+    <div class="agent">
+      <div class="panel corners" style="display:flex;flex-direction:column;min-width:0">
+        <div class="phead"><span class="lbl">Session</span><button class="btn sm ghost" id="clearChat">Clear</button></div>
+        <div class="log" id="log"></div>
+        <form class="compose" id="compose">
+          <textarea class="in" id="ask" rows="1" placeholder="How do I get to $100K fastest?"></textarea>
+          <button class="btn solid" id="askBtn" type="submit">Send</button>
+        </form>
+      </div>
+      <div>
+        <div class="lbl" style="margin-bottom:10px">Try asking</div>
+        <div class="sugs" id="sugs"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap lbl"><span>Wealth Effect · Education, not financial advice</span><span id="ftSave">Your data stays private to you</span></div></footer>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const usd0 = new Intl.NumberFormat("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0});
+const money = n => usd0.format(Math.round(n || 0));
+const compact = n => {
+  const a = Math.abs(n), s = n < 0 ? "-" : "";
+  if (a >= 1e9) return s + "$" + (a/1e9).toFixed(a >= 1e10 ? 1 : 2) + "B";
+  if (a >= 1e6) return s + "$" + (a/1e6).toFixed(a >= 1e7 ? 1 : 2) + "M";
+  if (a >= 1e4) return s + "$" + (a/1e3).toFixed(a >= 1e5 ? 0 : 1) + "K";
+  return money(n);
+};
+const pct = (n, d = 0) => (n * 100).toFixed(d) + "%";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mkey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+const mlabel = k => { const [y, m] = k.split("-"); return MONTHS[+m - 1] + " " + y; };
+const mshort = k => { const [y, m] = k.split("-"); return MONTHS[+m - 1] + " ’" + y.slice(2); };
+const addMonths = (k, n) => { const [y, m] = k.split("-").map(Number); return mkey(new Date(y, m - 1 + n, 1)); };
+const NOW = new Date(), THIS_MONTH = mkey(NOW);
+let csCache = null, csAt = 0;
+const cssVar = n => { const t = performance.now(); if (!csCache || t - csAt > 500) { csCache = getComputedStyle(document.documentElement); csAt = t; } return csCache.getPropertyValue(n).trim(); };
+
+/* ─────────── data ─────────── */
+const ASSET_CATS = {cash:"Cash", invest:"Investments", retire:"Retirement", property:"Property", other:"Other"};
+const LIAB_CATS = {card:"Credit card", student:"Student loan", auto:"Auto loan", mortgage:"Mortgage", other:"Other"};
+const CAT_COLOR = {cash:"--c1", invest:"--c2", retire:"--c5", property:"--c4", other:"--c3"};
+const LEVELS = [[0,"Ground"],[150,"Ignition"],[400,"Liftoff"],[750,"Max Q"],[1200,"Low orbit"],[1800,"High orbit"],[2600,"Escape velocity"],[3600,"Deep space"],[5000,"Interstellar"]];
+
+function exampleState() {
+  const assets = [
+    {id:uid(), name:"Checking", cat:"cash", value:4200},
+    {id:uid(), name:"High-yield savings", cat:"cash", value:9500},
+    {id:uid(), name:"Roth IRA", cat:"retire", value:14800},
+    {id:uid(), name:"401(k)", cat:"retire", value:22300},
+    {id:uid(), name:"Brokerage index fund", cat:"invest", value:6100},
+    {id:uid(), name:"Car (resale value)", cat:"property", value:12000},
+  ];
+  const liabilities = [
+    {id:uid(), name:"Student loan", cat:"student", value:18400},
+    {id:uid(), name:"Credit card", cat:"card", value:1250},
+    {id:uid(), name:"Car loan", cat:"auto", value:7800},
+  ];
+  const A = 68900, L = 27450, n = 18, history = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1), w = i === n - 1 ? 0 : Math.sin(i * 1.7) * 1400 + Math.cos(i * .9) * 600;
+    history.push({m: addMonths(THIS_MONTH, i - (n - 1)), a: Math.round(41500 + (A - 41500) * Math.pow(t, 1.15) + w), l: Math.round(36600 + (L - 36600) * t + (i === n - 1 ? 0 : Math.sin(i) * 250))});
+  }
+  return {v:1, example:true, updatedAt:0, profile:{age:27, exp:3200, save:900},
+    assets, liabilities, history,
+    plan:{start:41450, link:true, monthly:900, rate:7, infl:3, years:30, goal:1000000},
+    pp:{amt:10000, infl:3, years:30},
+    milestones:[{id:uid(), name:"House down payment", target:83000, kind:"cash", custom:true}],
+    learned:{"compound-interest":{box:2}, "net-worth":{box:3}, "inflation":{box:1}, "index-fund":{box:1}, "emergency-fund":{box:2}},
+    flags:{}};
+}
+function blankState(prev) {
+  return {v:1, example:false, updatedAt:Date.now(), profile:{age:prev?.profile?.age ?? 27, exp:3000, save:500},
+    assets:[{id:uid(), name:"Checking", cat:"cash", value:0}], liabilities:[], history:[],
+    plan:{start:0, link:true, monthly:500, rate:7, infl:3, years:30, goal:1000000},
+    pp:{amt:10000, infl:3, years:30}, milestones:[], learned:prev?.learned || {}, flags:{}};
+}
+function normalize(s) {
+  const base = exampleState();
+  if (!s || typeof s !== "object") return base;
+  const out = Object.assign({}, base, s);
+  for (const k of ["profile","plan","pp","flags","learned"]) out[k] = Object.assign({}, base[k] && k !== "learned" && k !== "flags" ? base[k] : {}, s[k] || {});
+  for (const k of ["assets","liabilities","history","milestones"]) out[k] = Array.isArray(s[k]) ? s[k] : base[k];
+  return out;
+}
+
+const LSKEY = "wealth-effect:v1";
+let state;
+try { state = normalize(JSON.parse(localStorage.getItem(LSKEY))); if (!localStorage.getItem(LSKEY)) state = exampleState(); } catch { state = exampleState(); }
+
+/* persistence: private per-person db doc when signed in, browser storage otherwise */
+let docRef = null, saveTimer = null, writing = Promise.resolve();
+function save() {
+  if (state.example && !state.flags.keptExample) return;
+  state.updatedAt = Date.now();
+  try { localStorage.setItem(LSKEY, JSON.stringify(state)); } catch {}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    if (!docRef) return;
+    const snap = JSON.parse(JSON.stringify(state));
+    writing = writing.then(() => docRef.set(snap)).then(() => setSync("Synced to your account")).catch(() => setSync("Saved on this device"));
+  }, 900);
+}
+function setSync(t) { $("#tmSync").textContent = t; $("#ftSave").textContent = t === "Synced to your account" ? "Synced privately to your Claude account" : "Saved privately in this browser"; }
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))]);
+(async () => {
+  try {
+    const use = window.claude?.use; if (!use) return;
+    const [db, user] = await Promise.all([use("db"), use("user")]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    docRef = db.collection("data/users/" + id).doc("wealth");
+    const snap = await withTimeout(docRef.get(), 10000);
+    if (snap.exists) {
+      const d = snap.data();
+      if (d && (d.updatedAt || 0) >= (state.updatedAt || 0)) { state = normalize(d); prevAch = null; renderAll(); }
+      else save();
+    } else if (!state.example || state.flags.keptExample) save();
+    setSync("Synced to your account");
+  } catch { docRef = null; }
+})();
+
+/* ─────────── derived numbers ─────────── */
+const sum = a => a.reduce((t, x) => t + (+x.value || 0), 0);
+const totals = () => { const a = sum(state.assets), l = sum(state.liabilities); return {a, l, nw:a - l}; };
+const byCat = cat => state.assets.filter(x => x.cat === cat).reduce((t, x) => t + (+x.value || 0), 0);
+const kindValue = k => k === "cash" ? byCat("cash") : k === "invest" ? byCat("invest") + byCat("retire") : totals().nw;
+const fiNumber = () => 25 * 12 * (+state.profile.exp || 0);
+function systemMilestones() {
+  const exp = +state.profile.exp || 0;
+  const list = [
+    {id:"s-pos", name:"Net worth positive", target:1, kind:"nw"},
+    {id:"s-ef", name:"Emergency fund · 6 months", target:Math.max(1000, exp * 6), kind:"cash"},
+    {id:"s-10k", name:"$10K net worth", target:1e4, kind:"nw"},
+    {id:"s-50k", name:"$50K net worth", target:5e4, kind:"nw"},
+    {id:"s-100k", name:"Six figures", target:1e5, kind:"nw"},
+    {id:"s-250k", name:"Quarter million", target:2.5e5, kind:"nw"},
+    {id:"s-1m", name:"Millionaire", target:1e6, kind:"nw"},
+  ];
+  if (exp > 0) list.push({id:"s-fi", name:"Financial independence (25× spending)", target:fiNumber(), kind:"nw"});
+  return list;
+}
+const allMilestones = () => [...systemMilestones(), ...state.milestones].map(m => {
+  const v = kindValue(m.kind); return {...m, value:v, prog:clamp(v / (m.target || 1), 0, 1), done:v >= m.target};
+}).sort((a, b) => a.target - b.target);
+function streak() {
+  const set = new Set(state.history.map(h => h.m)); if (!set.size) return 0;
+  let k = set.has(THIS_MONTH) ? THIS_MONTH : addMonths(THIS_MONTH, -1), n = 0;
+  while (set.has(k)) { n++; k = addMonths(k, -1); }
+  return n;
+}
+const learnedCount = () => Object.values(state.learned).filter(x => x.box >= 1).length;
+function achievements() {
+  const t = totals(), st = streak(), lc = learnedCount();
+  return [
+    {k:"log", n:"First log", d:"Log a month", on:state.history.length >= 1, ic:"01"},
+    {k:"s3", n:"Three in a row", d:"3-month logging streak", on:st >= 3, ic:"03"},
+    {k:"s12", n:"Full orbit", d:"12-month logging streak", on:st >= 12, ic:"12"},
+    {k:"pos", n:"In the black", d:"Net worth above $0", on:t.nw > 0, ic:"+"},
+    {k:"buf", n:"Fully buffered", d:"6 months of spending in cash", on:byCat("cash") >= 6 * state.profile.exp && state.profile.exp > 0, ic:"6M"},
+    {k:"debt", n:"Debt-free", d:"Every liability at $0", on:t.l === 0 && t.a > 0, ic:"0"},
+    {k:"6fig", n:"Six figures", d:"$100K net worth", on:t.nw >= 1e5, ic:"K"},
+    {k:"l10", n:"Fluent", d:"Learn 10 terms", on:lc >= 10, ic:"Aa"},
+    {k:"lall", n:"Encyclopedic", d:"Learn every term", on:lc >= TERMS.length, ic:"∞"},
+    {k:"plan", n:"Flight plan", d:"Save a goal from the planner", on:!!state.flags.planned, ic:"→"},
+    {k:"mis", n:"Mission set", d:"Create your own milestone", on:state.milestones.length > 0, ic:"◎"},
+    {k:"ask", n:"Mission control", d:"Ask the agent a question", on:!!state.flags.asked, ic:"?"},
+  ];
+}
+function xpInfo() {
+  const ms = allMilestones().filter(m => m.done).length, ach = achievements().filter(a => a.on).length;
+  const xp = ms * 100 + state.history.length * 40 + learnedCount() * 10 + ach * 50;
+  let i = 0; while (i < LEVELS.length - 1 && xp >= LEVELS[i + 1][0]) i++;
+  const lo = LEVELS[i][0], hi = LEVELS[i + 1]?.[0] ?? lo;
+  return {xp, lvl:i + 1, name:LEVELS[i][1], next:LEVELS[i + 1]?.[1], into:xp - lo, need:hi - lo, frac:hi > lo ? (xp - lo) / (hi - lo) : 1};
+}
+
+/* ─────────── effects ─────────── */
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#%/+";
+function scramble(el) {
+  if (reduce || el._scr) return;
+  const final = el.dataset.text || (el.dataset.text = el.textContent);
+  el._scr = true; let f = 0; const total = Math.min(26, 10 + final.length / 3);
+  const step = () => {
+    const shown = Math.floor(final.length * (f / total));
+    el.textContent = final.split("").map((c, i) => i < shown || c === " " ? c : GLYPHS[(Math.random() * GLYPHS.length) | 0]).join("");
+    if (++f <= total) requestAnimationFrame(step); else { el.textContent = final; el._scr = false; }
+  };
+  step();
+}
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), {threshold:.6});
+$$(".scr").forEach(el => io.observe(el));
+$$(".nav a").forEach(a => a.addEventListener("mouseenter", () => scramble(a)));
+
+function countTo(el, to, fmt) {
+  const from = el._v ?? 0; el._v = to;
+  if (reduce || from === to) { el.innerHTML = fmt(to); return; }
+  const t0 = performance.now(), dur = from === 0 ? 1600 : 700;
+  const tick = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(2, -10 * p); el.innerHTML = fmt(from + (to - from) * (p === 1 ? 1 : e)); if (p < 1) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function toast(msg, xp) {
+  const t = document.createElement("div"); t.className = "toast";
+  t.innerHTML = `<span>${esc(msg)}</span>${xp ? `<span class="xp">+${xp} XP</span>` : ""}`;
+  $("#toasts").append(t); setTimeout(() => { t.style.transition = "opacity .4s"; t.style.opacity = 0; setTimeout(() => t.remove(), 450); }, 3600);
+}
+/* telemetry */
+const tick = () => { const d = new Date(); $("#tmDate").textContent = `${mlabel(mkey(d))} · ${d.toLocaleTimeString("en-US", {hour12:false})}`; };
+tick(); setInterval(tick, 1000);
+$("#overview").addEventListener("pointermove", e => { const r = e.currentTarget.getBoundingClientRect(); $("#tmXY").textContent = `X ${String(Math.round(e.clientX - r.left)).padStart(4, "0")} · Y ${String(Math.round(e.clientY - r.top)).padStart(4, "0")}`; });
+/* nav highlight */
+const secIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $$(".nav a").forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }), {rootMargin:"-45% 0px -50% 0px"});
+$$("main section").forEach(s => secIO.observe(s));
+
+/* ─────────── chart engine ─────────── */
+function niceTicks(min, max, count = 5) {
+  if (max === min) { max = min + 1; }
+  const step0 = (max - min) / count, mag = Math.pow(10, Math.floor(Math.log10(step0))), nrm = step0 / mag;
+  const step = (nrm < 1.5 ? 1 : nrm < 3 ? 2 : nrm < 7 ? 5 : 10) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, ticks = [];
+  for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toFixed(8));
+  return {lo, hi, ticks};
+}
+/* cfg: {height, labels[], series:[{name,color,values,area,dash,width}], xTick(i)->label|null, tipTitle(i), hline:{y,label}, marker:{i,y,label}, yFmt} */
+function drawChart(el, cfg) {
+  const W = Math.max(280, el.clientWidth - 16), H = cfg.height || (W < 560 ? 220 : 300);
+  const m = {t:14, r:14, b:26, l:W < 480 ? 46 : 58};
+  const vis = cfg.series.filter(s => !s.hidden);
+  const all = vis.flatMap(s => s.values).concat(cfg.hline ? [cfg.hline.y] : []);
+  let mn = Math.min(0, ...all), mx = Math.max(...all, 1);
+  const {lo, hi, ticks} = niceTicks(mn, mx, W < 480 ? 4 : 5);
+  const n = cfg.labels.length, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const X = i => m.l + (n <= 1 ? iw / 2 : i * iw / (n - 1)), Y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+  const yf = cfg.yFmt || compact;
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.aria || "Chart")}">`;
+  for (const t of ticks) s += `<line class="gl ${t === 0 ? "gl0" : ""}" x1="${m.l}" x2="${W - m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="axis" x="${m.l - 8}" y="${Y(t) + 3}" text-anchor="end">${esc(yf(t))}</text>`;
+  const maxLabels = Math.max(2, Math.floor(iw / 72)), every = Math.ceil(n / maxLabels);
+  for (let i = 0; i < n; i++) {
+    const lab = cfg.xTick ? cfg.xTick(i, every) : (i % every === 0 ? cfg.labels[i] : null);
+    if (lab != null) s += `<text class="axis" x="${X(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}">${esc(lab)}</text>`;
+  }
+  if (cfg.hline) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(cfg.hline.y)}" y2="${Y(cfg.hline.y)}" style="stroke:var(--fg);stroke-dasharray:2 4;stroke-width:1"/><text class="axis" x="${W - m.r}" y="${Y(cfg.hline.y) - 6}" text-anchor="end" style="fill:var(--fg)">${esc(cfg.hline.label)}</text>`;
+  const anim = !el._drawn && !reduce;
+  vis.forEach((se, k) => {
+    const pts = se.values.map((v, i) => [X(i), Y(v)]);
+    const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("");
+    if (se.area) s += `<path class="${anim ? "fade" : ""}" d="${d}L${X(n - 1)} ${Y(Math.max(lo, 0))}L${X(0)} ${Y(Math.max(lo, 0))}Z" style="fill:var(${se.color});fill-opacity:.09;stroke:none"/>`;
+    s += `<path class="ln ${anim ? "draw" : ""}" d="${d}" style="fill:none;stroke:var(${se.color});stroke-width:${se.width || 1.6};${se.dash ? "stroke-dasharray:4 4;" : ""}stroke-linejoin:round;stroke-linecap:round"/>`;
+    if (se.end !== false && pts.length) { const p = pts[pts.length - 1]; s += `<circle cx="${p[0]}" cy="${p[1]}" r="3.2" style="fill:var(${se.color})" class="${anim ? "fade" : ""}"/>`; }
+  });
+  if (cfg.marker && cfg.marker.i != null) {
+    const x = X(cfg.marker.i), y = Y(cfg.marker.y);
+    s += `<line x1="${x}" x2="${x}" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--line2);stroke-width:1"/><rect x="${x - 4}" y="${y - 4}" width="8" height="8" transform="rotate(45 ${x} ${y})" style="fill:var(--fg)"/><text class="axis" x="${x + (x > W * .7 ? -10 : 10)}" y="${m.t + 10}" text-anchor="${x > W * .7 ? "end" : "start"}" style="fill:var(--fg)">${esc(cfg.marker.label)}</text>`;
+  }
+  s += `<g class="hov" style="opacity:0"><line class="hx" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--fg);stroke-width:1"/>${vis.map(se => `<circle r="4" style="fill:var(--surface);stroke:var(${se.color});stroke-width:2"/>`).join("")}</g>`;
+  s += `<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" style="fill:transparent"/></svg><div class="tip" style="opacity:0"></div>`;
+  el.innerHTML = s;
+  if (anim) { $$(".draw", el).forEach(p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.setProperty("--len", L); p.addEventListener("animationend", () => { p.style.strokeDasharray = vis.find(v => p.getAttribute("style").includes(v.color) && v.dash) ? "4 4" : ""; }, {once:true}); }); el._drawn = true; }
+  const svg = $("svg", el), hov = $(".hov", svg), tip = $(".tip", el), dots = $$("circle", hov);
+  const move = e => {
+    const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * (W / r.width);
+    const i = clamp(Math.round((x - m.l) / (iw / Math.max(1, n - 1))), 0, n - 1);
+    hov.style.opacity = 1; $(".hx", hov).setAttribute("x1", X(i)); $(".hx", hov).setAttribute("x2", X(i));
+    vis.forEach((se, k) => { dots[k].setAttribute("cx", X(i)); dots[k].setAttribute("cy", Y(se.values[i])); });
+    tip.innerHTML = `<div class="t">${esc(cfg.tipTitle ? cfg.tipTitle(i) : cfg.labels[i])}</div>` + vis.map(se => `<div class="r"><span><i class="sw" style="background:var(${se.color})"></i>${esc(se.name)}</span><b>${esc(money(se.values[i]))}</b></div>`).join("");
+    tip.style.opacity = 1;
+    const px = X(i) / W * r.width + 8, tw = tip.offsetWidth;
+    tip.style.left = (px + tw + 24 > r.width ? px - tw - 20 : px + 16) + "px";
+  };
+  svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move);
+  svg.addEventListener("pointerleave", () => { hov.style.opacity = 0; tip.style.opacity = 0; });
+}
+function legend(el, series, onToggle) {
+  el.innerHTML = series.map((s, i) => `<button type="button" data-i="${i}" class="${s.hidden ? "off" : ""}" aria-pressed="${!s.hidden}"><i class="${s.dash ? "dash" : ""}" style="background:var(${s.color});border-color:var(${s.color})"></i>${esc(s.name)}</button>`).join("");
+  if (onToggle) $$("button", el).forEach(b => b.onclick = () => onToggle(+b.dataset.i)); else $$("button", el).forEach(b => b.style.cursor = "default");
+}
+
+/* ─────────── overview ─────────── */
+let nwRange = 0; const nwHidden = {};
+function historySeries() {
+  const h = [...state.history].sort((a, b) => a.m.localeCompare(b.m));
+  const t = totals();
+  if (!h.length || h[h.length - 1].m !== THIS_MONTH) h.push({m:THIS_MONTH, a:t.a, l:t.l, live:true});
+  else h[h.length - 1] = {...h[h.length - 1], a:t.a, l:t.l};
+  return h;
+}
+function renderOverview() {
+  const t = totals(), x = xpInfo();
+  countTo($("#heroNW"), t.nw, v => `${v < 0 ? "−" : ""}<span class="cur">$</span>${Math.abs(Math.round(v)).toLocaleString("en-US")}`);
+  const h = historySeries(), last = h[h.length - 1];
+  const d = (k) => { const p = h[h.length - 1 - k]; if (!p) return null; return (last.a - last.l) - (p.a - p.l); };
+  const fmtD = v => v == null ? "—" : (v >= 0 ? "+" : "−") + compact(Math.abs(v)).replace("-", "");
+  $("#heroDeltas").innerHTML = `<span class="delta lbl">1 mo <b>${fmtD(d(1))}</b></span><span class="delta lbl">6 mo <b>${fmtD(d(6))}</b></span><span class="delta lbl">12 mo <b>${fmtD(d(12))}</b></span><span class="delta lbl">Streak <b>${streak()} mo</b></span>`;
+  const next = allMilestones().find(m => !m.done);
+  const runway = state.profile.exp > 0 ? byCat("cash") / state.profile.exp : 0;
+  $("#heroRO").innerHTML = [
+    ["Assets", compact(t.a), `${state.assets.length} accounts`],
+    ["Liabilities", compact(t.l), `${state.liabilities.length} debts`],
+    ["Cash runway", runway.toFixed(1) + " mo", "of spending covered"],
+    ["Level " + x.lvl, x.name, `${x.xp.toLocaleString()} XP`, x.frac],
+    ["Next milestone", next ? compact(next.target) : "All clear", next ? next.name : "Add a new one", next ? next.prog : 1],
+    ["FI number", compact(fiNumber()), state.profile.exp ? pct(clamp(t.nw / fiNumber(), 0, 9), 1) + " of the way" : "Set monthly spending"],
+  ].map(([l, v, s, f]) => `<div class="ro"><div class="lbl">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div>${f != null ? `<div class="meter"><i style="width:${(f * 100).toFixed(1)}%"></i></div>` : ""}</div>`).join("");
+  const hh = nwRange ? h.slice(-nwRange) : h;
+  const series = [
+    {key:"nw", name:"Net worth", color:"--c1", values:hh.map(p => p.a - p.l), area:true, width:2},
+    {key:"a", name:"Assets", color:"--c2", values:hh.map(p => p.a)},
+    {key:"l", name:"Liabilities", color:"--c3", values:hh.map(p => p.l), dash:true},
+  ].map(s => ({...s, hidden:!!nwHidden[s.key]}));
+  legend($("#nwLegend"), series, i => { const k = series[i].key; if (!nwHidden[k] && series.filter(s => !s.hidden).length === 1) return; nwHidden[k] = !nwHidden[k]; renderOverview(); });
+  drawChart($("#nwChart"), {labels:hh.map(p => mshort(p.m)), series, aria:"Net worth by month", tipTitle:i => mlabel(hh[i].m) + (hh[i].live ? " · live" : "")});
+  $("#exampleBanner").hidden = !state.example;
+  $("#lvN").textContent = x.lvl; $("#lvName").textContent = x.name;
+}
+$("#nwRange").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; nwRange = +b.dataset.r; $$("#nwRange button").forEach(x => x.classList.toggle("on", x === b)); renderOverview(); });
+
+/* ─────────── ledger ─────────── */
+function rowHTML(x, cats, list) {
+  return `<div class="row" data-id="${x.id}" data-list="${list}">
+    <input class="in" id="n-${x.id}" value="${esc(x.name)}" aria-label="Name" maxlength="50">
+    <select class="in cat" id="c-${x.id}" aria-label="Category">${Object.entries(cats).map(([k, v]) => `<option value="${k}" ${k === x.cat ? "selected" : ""}>${v}</option>`).join("")}</select>
+    <input class="in val num" id="v-${x.id}" type="number" min="0" step="50" inputmode="numeric" value="${+x.value || 0}" aria-label="Value">
+    <button class="x" type="button" aria-label="Remove">×</button></div>`;
+}
+function renderLedger() {
+  $("#assetRows").innerHTML = state.assets.map(x => rowHTML(x, ASSET_CATS, "assets")).join("") || `<div class="row" style="grid-template-columns:1fr;color:var(--muted)">No assets yet. Add your checking account first.</div>`;
+  $("#liabRows").innerHTML = state.liabilities.map(x => rowHTML(x, LIAB_CATS, "liabilities")).join("") || `<div class="row" style="grid-template-columns:1fr;color:var(--muted)">No debts listed. If that's true, nice.</div>`;
+  $("#pAge").value = state.profile.age; $("#pExp").value = state.profile.exp; $("#pSave").value = state.profile.save;
+  renderTotals();
+}
+function renderTotals() {
+  const t = totals();
+  $("#totA").textContent = money(t.a); $("#totL").textContent = money(t.l); $("#totNW").textContent = money(t.nw);
+  const cats = Object.keys(ASSET_CATS).map(k => [k, byCat(k)]).filter(([, v]) => v > 0);
+  $("#alloc").innerHTML = cats.map(([k, v]) => `<i style="flex-grow:${v};background:var(${CAT_COLOR[k]})" title="${ASSET_CATS[k]}"></i>`).join("");
+  $("#allocKey").innerHTML = cats.map(([k, v]) => `<span><i style="background:var(${CAT_COLOR[k]})"></i>${ASSET_CATS[k]} ${t.a ? pct(v / t.a) : ""}</span>`).join("");
+  const logged = state.history.find(h => h.m === THIS_MONTH);
+  $("#logBtn").innerHTML = logged ? `Update ${MONTHS[NOW.getMonth()]} log <span class="arr">→</span>` : `Log ${MONTHS[NOW.getMonth()]} ${NOW.getFullYear()} <span class="arr">→</span>`;
+  $("#logNote").textContent = logged ? `${mlabel(THIS_MONTH)} is logged. Updating it overwrites this month's point.` : `Not logged yet this month. +40 XP and your streak keeps going.`;
+}
+function touch() { if (state.example) { state.example = false; state.flags.keptExample = true; } }
+let rerenderTimer;
+function changed(full) { save(); clearTimeout(rerenderTimer); rerenderTimer = setTimeout(() => { renderOverview(); renderPlan(); renderPower(); renderMilestones(); checkAchievements(); }, full ? 0 : 160); }
+for (const id of ["#assetRows", "#liabRows"]) {
+  $(id).addEventListener("input", e => {
+    const row = e.target.closest(".row"); if (!row || !row.dataset.id) return;
+    const it = state[row.dataset.list].find(x => x.id === row.dataset.id); if (!it) return;
+    touch();
+    if (e.target.id.startsWith("n-")) it.name = e.target.value;
+    else if (e.target.id.startsWith("c-")) it.cat = e.target.value;
+    else it.value = Math.max(0, +e.target.value || 0);
+    renderTotals(); changed();
+  });
+  $(id).addEventListener("change", e => { if (e.target.tagName === "SELECT") e.target.dispatchEvent(new Event("input", {bubbles:true})); });
+  $(id).addEventListener("click", e => {
+    if (!e.target.classList.contains("x")) return;
+    const row = e.target.closest(".row"); touch();
+    state[row.dataset.list] = state[row.dataset.list].filter(x => x.id !== row.dataset.id);
+    renderLedger(); changed(true);
+  });
+}
+$("#addAsset").onclick = () => { touch(); const it = {id:uid(), name:"New account", cat:"cash", value:0}; state.assets.push(it); renderLedger(); changed(true); $("#n-" + it.id).select(); };
+$("#addLiab").onclick = () => { touch(); const it = {id:uid(), name:"New debt", cat:"card", value:0}; state.liabilities.push(it); renderLedger(); changed(true); $("#n-" + it.id).select(); };
+$("#logBtn").onclick = () => {
+  touch(); const t = totals(), had = state.history.some(h => h.m === THIS_MONTH);
+  state.history = state.history.filter(h => h.m !== THIS_MONTH).concat({m:THIS_MONTH, a:t.a, l:t.l});
+  renderTotals(); changed(true);
+  toast(had ? `${mlabel(THIS_MONTH)} updated` : `${mlabel(THIS_MONTH)} logged · streak ${streak()} mo`, had ? 0 : 40);
+};
+for (const [id, k] of [["#pAge", "age"], ["#pExp", "exp"], ["#pSave", "save"]]) $(id).addEventListener("input", e => { touch(); state.profile[k] = Math.max(0, +e.target.value || 0); changed(); });
+let resetArmed = false;
+$("#resetAll").onclick = e => {
+  if (!resetArmed) { resetArmed = true; e.target.textContent = "Tap again to erase"; setTimeout(() => { resetArmed = false; e.target.textContent = "Reset everything"; }, 3000); return; }
+  resetArmed = false; e.target.textContent = "Reset everything";
+  state = blankState(); state.learned = {}; prevAch = null; renderAll(); save(); toast("Cleared. Start your ledger.");
+};
+$("#startFresh").onclick = () => { state = blankState(state); prevAch = null; renderAll(); save(); location.hash = "#ledger"; toast("Fresh start. Add your accounts."); };
+$("#keepExample").onclick = () => { touch(); save(); renderOverview(); location.hash = "#ledger"; };
+
+/* ─────────── plan ─────────── */
+let pjMode = "nom";
+function project(start, monthly, rate, years) {
+  const r = rate / 100 / 12, out = [start]; let v = start;
+  for (let mth = 1; mth <= years * 12; mth++) { v = v * (1 + r) + monthly; if (mth % 12 === 0) out.push(v); }
+  return out;
+}
+function bindPair(rangeId, numId, get, set) {
+  const r = $(rangeId), n = $(numId);
+  const upd = v => { set(v); r.value = v; n.value = v; touch(); renderPlan(); save(); };
+  r.addEventListener("input", () => upd(+r.value)); n.addEventListener("change", () => upd(+n.value || 0));
+  r.value = n.value = get();
+}
+function syncPlanInputs() {
+  const p = state.plan;
+  if (p.link) p.start = Math.round(totals().nw);
+  $("#cStart").value = p.start; $("#cLink").checked = p.link; $("#cStart").disabled = false;
+  for (const [a, k] of [["Monthly", "monthly"], ["Rate", "rate"], ["Infl", "infl"], ["Years", "years"]]) { $("#c" + a).value = p[k]; $("#c" + a + "N").value = p[k]; }
+  $("#cGoal").value = p.goal;
+}
+function renderPlan() {
+  const p = state.plan; if (p.link) { p.start = Math.round(totals().nw); $("#cStart").value = p.start; }
+  const age = +state.profile.age || 0, Y = Math.round(p.years), yr0 = NOW.getFullYear();
+  const defl = i => pjMode === "real" ? Math.pow(1 + p.infl / 100, i) : 1;
+  const sc = [
+    {key:"lo", name:`Cautious ${Math.max(0, p.rate - 3)}%`, color:"--c4", rate:Math.max(0, p.rate - 3), dash:true},
+    {key:"mid", name:`Expected ${p.rate}%`, color:"--c1", rate:p.rate, area:true, width:2.2},
+    {key:"hi", name:`Strong ${p.rate + 3}%`, color:"--c2", rate:p.rate + 3, dash:true},
+  ].map(s => ({...s, raw:project(p.start, p.monthly, s.rate, Y)}));
+  sc.forEach(s => s.values = s.raw.map((v, i) => v / defl(i)));
+  const contrib = Array.from({length:Y + 1}, (_, i) => (p.start + p.monthly * 12 * i) / defl(i));
+  const series = [...sc, {name:"What you put in", color:"--muted", values:contrib, width:1.2, end:false}];
+  const mid = sc[1].raw, gi = mid.findIndex(v => v >= p.goal);
+  legend($("#pjLegend"), series);
+  const goalShown = pjMode === "real" ? null : {y:p.goal, label:"Goal " + compact(p.goal)};
+  drawChart($("#pjChart"), {labels:mid.map((_, i) => String(yr0 + i)), series, aria:"Projected growth",
+    xTick:(i, every) => { const st = Math.max(every, 5); return i === Y || (i % st === 0 && Y - i >= st / 2) ? (age ? "Age " + (age + i) : String(yr0 + i)) : null; },
+    tipTitle:i => `${yr0 + i}${age ? " · age " + (age + i) : ""}`, hline:goalShown,
+    marker:gi >= 0 ? {i:gi, y:sc[1].values[gi], label:`Goal · ${yr0 + gi}`} : null});
+  const end = mid[Y], real = end / Math.pow(1 + p.infl / 100, Y), put = p.start + p.monthly * 12 * Y;
+  const r = p.rate / 100 / 12, nM = Y * 12, g = Math.pow(1 + r, nM);
+  const need = r === 0 ? (p.goal - p.start) / nM : (p.goal - p.start * g) * r / (g - 1);
+  $("#pjOuts").innerHTML = [
+    [age ? `At age ${age + Y}` : `In ${yr0 + Y}`, compact(end), "expected, future dollars"],
+    ["In today's dollars", compact(real), `after ${p.infl}% inflation`],
+    ["Growth earned", compact(Math.max(0, end - put)), `you put in ${compact(put)}`],
+  ].map(([l, v, s]) => `<div class="ro"><div class="lbl">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  $("#pjCallout").innerHTML = (gi >= 0
+    ? `<span>At ${p.rate}% you hit <b>${compact(p.goal)}</b> in <b>${yr0 + gi}</b>${age ? `, at age <b>${age + gi}</b>` : ""}. ${gi === 0 ? "You're already there." : `That's ${gi} years out.`}</span>`
+    : `<span>At this pace you reach <b>${compact(end)}</b> in ${Y} years, short of <b>${compact(p.goal)}</b>.</span>`)
+    + `<span class="mono" style="font-size:12px">${need <= 0 ? "On track with $0/mo extra" : `To hit it in ${Y} yrs: <b>${money(need)}/mo</b>`}</span>`;
+}
+bindPair("#cMonthly", "#cMonthlyN", () => state.plan.monthly, v => state.plan.monthly = clamp(v, 0, 1e6));
+bindPair("#cRate", "#cRateN", () => state.plan.rate, v => state.plan.rate = clamp(v, 0, 30));
+bindPair("#cInfl", "#cInflN", () => state.plan.infl, v => state.plan.infl = clamp(v, 0, 20));
+bindPair("#cYears", "#cYearsN", () => state.plan.years, v => state.plan.years = clamp(Math.round(v), 1, 60));
+$("#cStart").addEventListener("change", e => { touch(); state.plan.start = +e.target.value || 0; state.plan.link = false; $("#cLink").checked = false; renderPlan(); save(); });
+$("#cLink").addEventListener("change", e => { touch(); state.plan.link = e.target.checked; renderPlan(); save(); });
+$("#cGoal").addEventListener("change", e => { touch(); state.plan.goal = Math.max(1, +e.target.value || 0); renderPlan(); save(); });
+$("#goalPresets").innerHTML = [[1e5, "$100K"], [5e5, "$500K"], [1e6, "$1M"], ["fi", "FI number"]].map(([v, l]) => `<button type="button" data-v="${v}">${l}</button>`).join("");
+$("#goalPresets").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; touch(); state.plan.goal = b.dataset.v === "fi" ? Math.max(1, fiNumber()) : +b.dataset.v; $("#cGoal").value = state.plan.goal; renderPlan(); save(); });
+$("#pjMode").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; pjMode = b.dataset.m; $$("#pjMode button").forEach(x => x.classList.toggle("on", x === b)); renderPlan(); });
+$("#saveGoal").onclick = () => {
+  touch(); const g = state.plan.goal;
+  if (!state.milestones.some(m => m.target === g && m.kind === "nw")) state.milestones.push({id:uid(), name:`Plan goal · ${compact(g)}`, target:g, kind:"nw", custom:true});
+  state.flags.planned = true; changed(true); toast(`Milestone added: ${compact(g)} net worth`);
+};
+
+/* ─────────── purchasing power ─────────── */
+const ITEMS = [
+  ["Concert night for two", 400], ["Flagship phone", 1100], ["Pro laptop", 2200], ["Two weeks in Europe for two", 7000],
+  ["Luxury watch", 10000], ["A year of in-state public tuition", 11600], ["A year of rent", 24000], ["Reliable used car", 26000],
+  ["Average US wedding", 33000], ["A year building your own startup", 45000], ["New car (US average)", 49000],
+  ["20% down on a typical US home", 83000], ["Typical US home, paid in full", 415000], ["Lake house", 750000], ["Retire on today's spending", "fi"],
+];
+function monthsToReach(price) {
+  const save = +state.profile.save || 0, r = .07 / 12; let v = totals().nw, m = 0;
+  while (v < price && m < 720) { v = v * (1 + (v > 0 ? r : 0)) + save; m++; }
+  return v >= price ? m : null;
+}
+const dur = m => m == null ? "50+ yrs at this pace" : m < 12 ? `${m} mo away` : `${Math.floor(m / 12)} yr${m >= 24 ? "s" : ""}${m % 12 ? " " + (m % 12) + " mo" : ""} away`;
+function tierOf(price, nw) {
+  if (nw <= 0) return [3, "Out of range"];
+  const f = price / nw; return f <= .05 ? [0, "Comfortable"] : f <= .25 ? [1, "Within reach"] : f <= 1 ? [2, "Stretch"] : [3, "Out of range"];
+}
+function itemHTML(name, price, custom) {
+  const nw = totals().nw, [t, tl] = tierOf(price, nw);
+  const why = t < 3 ? `${pct(price / nw, price / nw < .01 ? 2 : 1)} of net worth` : dur(monthsToReach(price));
+  return `<div class="item ${t === 3 ? "locked" : ""} ${custom ? "custom" : ""}"><div><div class="nm">${esc(name)}</div><div class="pr num">${money(price)}</div></div>
+    <div class="meter"><i style="width:${nw > 0 ? clamp(price / nw, 0, 1) * 100 : 0}%"></i></div>
+    <div class="ft"><span class="why">${esc(why)}</span><span class="pill t${t}">${tl}</span></div></div>`;
+}
+function renderPower() {
+  const p = state.pp, Y = Math.round(p.years), yr0 = NOW.getFullYear();
+  const i = p.infl / 100, defl = k => Math.pow(1 + i, k);
+  const lines = [
+    {name:"Cash", color:"--c3", r:0, dash:true},
+    {name:"High-yield savings 3.5%", color:"--c4", r:.035},
+    {name:"Stock index fund 10%", color:"--c1", r:.10, area:true, width:2.2},
+  ].map(s => ({...s, values:Array.from({length:Y + 1}, (_, k) => p.amt * Math.pow(1 + s.r, k) / defl(k))}));
+  legend($("#ppLegend"), lines);
+  drawChart($("#ppChart"), {labels:lines[0].values.map((_, k) => String(yr0 + k)), series:lines, aria:"Purchasing power over time",
+    xTick:(k, every) => { const st = Math.max(every, 5); return k === Y || (k % st === 0 && Y - k >= st / 2) ? String(yr0 + k) : null; }, tipTitle:k => `${yr0 + k} · in today's dollars`,
+    hline:{y:p.amt, label:"Today " + compact(p.amt)}});
+  const cashReal = p.amt / defl(Y), hund = 100 * defl(Y), half = i > 0 ? Math.log(2) / Math.log(1 + i) : Infinity;
+  $("#ppSent").innerHTML = `
+    <p>Left in cash, <b>${money(p.amt)}</b> buys what <b>${money(cashReal)}</b> buys today after ${Y} years.</p>
+    <p>Something that costs <b>$100</b> today costs about <b>${money(hund)}</b> in ${yr0 + Y}.</p>
+    <p>At ${p.infl}% inflation, prices double every <b>${isFinite(half) ? half.toFixed(1) + " years" : "never"}</b>.</p>
+    <p>Invested at 10%, the same money is worth <b>${money(lines[2].values[Y])}</b> in today's dollars.</p>`;
+  const t = totals(), nw = Math.max(0, t.nw), exp = +state.profile.exp || 0;
+  $("#units").innerHTML = [
+    ["Months of your spending", exp ? (nw / exp).toFixed(1) : "—", "if income stopped today"],
+    ["Years of typical rent", (nw / 24000).toFixed(1), "at $2,000/mo"],
+    ["New cars", (nw / 49000).toFixed(2), "at the US average"],
+    ["Of a typical home", pct(nw / 415000, 1), "$415K median"],
+    ["Of your FI number", fiNumber() ? pct(nw / fiNumber(), 1) : "—", "25× yearly spending"],
+  ].map(([l, v, s]) => `<div class="ro"><div class="lbl">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  const chk = +$("#chkPrice").value || 0;
+  $("#items").innerHTML = (chk > 0 ? itemHTML("Your price check", chk, true) : "") + ITEMS.map(([n, pr]) => itemHTML(n, pr === "fi" ? Math.max(1, fiNumber()) : pr)).join("");
+}
+bindPairPP();
+function bindPairPP() {
+  const p = state.pp;
+  const pair = (rid, nid, k, lo, hi) => { const r = $(rid), n = $(nid); const upd = v => { state.pp[k] = clamp(v, lo, hi); r.value = n.value = state.pp[k]; touch(); renderPower(); save(); }; r.addEventListener("input", () => upd(+r.value)); n.addEventListener("change", () => upd(+n.value || 0)); };
+  pair("#ppInfl", "#ppInflN", "infl", 0, 20); pair("#ppYears", "#ppYearsN", "years", 1, 60);
+  $("#ppAmt").addEventListener("change", e => { touch(); state.pp.amt = Math.max(1, +e.target.value || 0); renderPower(); save(); });
+}
+function syncPPInputs() { const p = state.pp; $("#ppAmt").value = p.amt; $("#ppInfl").value = $("#ppInflN").value = p.infl; $("#ppYears").value = $("#ppYearsN").value = p.years; }
+$("#chkPrice").addEventListener("input", () => renderPower());
+
+/* ─────────── milestones + orbit ─────────── */
+let orbitHover = -1, orbitData = [], orbitT0 = performance.now();
+const PAL = ["--c1", "--c2", "--c4", "--c5", "--c3"];
+function renderMilestones() {
+  const ms = allMilestones(); orbitData = ms;
+  const x = xpInfo();
+  $("#lvBig").textContent = x.lvl; $("#lvTitle").textContent = x.name;
+  $("#xpFill").style.width = (x.frac * 100).toFixed(1) + "%";
+  $("#xpTxt").textContent = x.next ? `${x.xp.toLocaleString()} XP · ${(x.need - x.into).toLocaleString()} to ${x.next}` : `${x.xp.toLocaleString()} XP · top level`;
+  $("#mlist").innerHTML = ms.map((m, i) => `<div class="mrow ${m.done ? "done" : ""}" data-i="${i}">
+      <i class="sw" style="background:var(${PAL[i % PAL.length]})"></i>
+      <div class="nm">${esc(m.name)}<small>${m.kind === "nw" ? "Net worth" : m.kind === "cash" ? "Cash" : "Investments"} · ${compact(m.target)}</small></div>
+      <div class="pc">${m.done ? "Done" : pct(m.prog, m.prog < .1 ? 1 : 0)}</div>
+      ${m.custom ? `<button class="x" type="button" data-del="${m.id}" aria-label="Remove milestone">×</button>` : "<span></span>"}
+      <div class="bar2"><i style="width:${(m.prog * 100).toFixed(1)}%;background:var(${PAL[i % PAL.length]})"></i></div></div>`).join("");
+  const next = ms.find(m => !m.done);
+  setCenter(next ? {l:"Next milestone", v:compact(next.target), n:`${next.name} · ${pct(next.prog)}`} : {l:"Every ring closed", v:compact(totals().nw), n:"Add a bigger milestone"});
+  const ach = achievements();
+  $("#badgeCount").textContent = `${ach.filter(a => a.on).length} / ${ach.length}`;
+  $("#badges").innerHTML = ach.map(a => `<div class="badge ${a.on ? "on" : ""}"><div class="ic"><span>${esc(a.ic)}</span></div><div><div class="bn">${esc(a.n)}</div><div class="bd">${esc(a.d)}</div></div></div>`).join("");
+  const xi = xpInfo(); $("#lvN").textContent = xi.lvl; $("#lvName").textContent = xi.name;
+  drawOrbit();
+}
+function setCenter(o) { $("#ocL").textContent = o.l; $("#ocV").textContent = o.v; $("#ocN").textContent = o.n; }
+$("#mlist").addEventListener("click", e => { const id = e.target.dataset?.del; if (!id) return; state.milestones = state.milestones.filter(m => m.id !== id); changed(true); });
+$("#mlist").addEventListener("pointerover", e => { const r = e.target.closest(".mrow"); orbitHover = r ? +r.dataset.i : -1; drawOrbit(); });
+$("#mlist").addEventListener("pointerleave", () => { orbitHover = -1; drawOrbit(); renderCenterDefault(); });
+function renderCenterDefault() { const next = orbitData.find(m => !m.done); setCenter(next ? {l:"Next milestone", v:compact(next.target), n:`${next.name} · ${pct(next.prog)}`} : {l:"Every ring closed", v:compact(totals().nw), n:"Add a bigger milestone"}); }
+$("#addM").addEventListener("submit", e => {
+  e.preventDefault(); const name = $("#mName").value.trim(), target = +$("#mTarget").value;
+  if (!name || !(target > 0)) { toast("Give the milestone a name and a target amount"); return; }
+  touch(); state.milestones.push({id:uid(), name, target, kind:$("#mKind").value, custom:true});
+  $("#mName").value = ""; $("#mTarget").value = ""; changed(true); toast(`Milestone added: ${name}`);
+});
+const cvs = $("#orbit"), ctx2 = cvs.getContext("2d");
+function ringGeom(n, S) { const inner = S * .2, outer = S * .47, gap = n > 1 ? (outer - inner) / (n - 1) : 0; return i => inner + gap * i; }
+function drawOrbit(now = performance.now()) {
+  const wrap = $("#orbitWrap"), S = wrap.clientWidth, dpr = Math.min(2, devicePixelRatio || 1);
+  if (!S) return;
+  if (cvs.width !== Math.round(S * dpr)) { cvs.width = Math.round(S * dpr); cvs.height = Math.round(S * dpr); }
+  const c = ctx2; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, S, S);
+  const cx = S / 2, cy = S / 2, R = ringGeom(orbitData.length, S), line = cssVar("--line"), line2 = cssVar("--line2"), fg = cssVar("--fg"), muted = cssVar("--muted");
+  const intro = reduce ? 1 : clamp((now - orbitT0) / 1800, 0, 1), ease = 1 - Math.pow(1 - intro, 3);
+  const spin = reduce ? 0 : now / 9000;
+  // crosshair
+  c.strokeStyle = line; c.lineWidth = 1; c.beginPath(); c.moveTo(cx, S * .02); c.lineTo(cx, S * .98); c.moveTo(S * .02, cy); c.lineTo(S * .98, cy); c.stroke();
+  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, r1 = S * .49, r2 = r1 - (k % 6 === 0 ? 8 : 4); c.beginPath(); c.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); c.strokeStyle = line2; c.stroke(); }
+  orbitData.forEach((m, i) => {
+    const r = R(i), col = cssVar(PAL[i % PAL.length]), hl = orbitHover === i, dim = orbitHover >= 0 && !hl;
+    c.globalAlpha = dim ? .25 : 1;
+    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.strokeStyle = line2; c.lineWidth = 1; c.setLineDash([2, 4]); c.stroke(); c.setLineDash([]);
+    const start = -Math.PI / 2, end = start + Math.PI * 2 * m.prog * ease;
+    if (m.prog > 0) { c.beginPath(); c.arc(cx, cy, r, start, end); c.strokeStyle = col; c.lineWidth = hl ? 5 : 3; c.lineCap = "butt"; c.stroke(); }
+    // satellite at arc tip
+    const a = m.done ? start + spin * (1 + i * .15) * Math.PI * 2 : end;
+    const sx = cx + Math.cos(a) * r, sy = cy + Math.sin(a) * r;
+    c.fillStyle = m.done ? col : fg; c.save(); c.translate(sx, sy); c.rotate(Math.PI / 4); c.fillRect(-3.5, -3.5, 7, 7); c.restore();
+    c.globalAlpha = 1;
+  });
+  c.fillStyle = fg; c.beginPath(); c.arc(cx, cy, 3, 0, Math.PI * 2); c.fill();
+  c.font = `10px ${cssVar("--mono")}`; c.fillStyle = muted; c.textAlign = "left"; c.fillText("YOU", cx + 7, cy - 6);
+}
+let orbitVisible = true;
+new IntersectionObserver(es => { orbitVisible = es[0].isIntersecting; }).observe(cvs);
+function orbitLoop(t) { if (orbitVisible) drawOrbit(t); if (!reduce) requestAnimationFrame(orbitLoop); }
+requestAnimationFrame(orbitLoop);
+cvs.addEventListener("pointermove", e => {
+  const r = cvs.getBoundingClientRect(), S = r.width, x = e.clientX - r.left - S / 2, y = e.clientY - r.top - S / 2, d = Math.hypot(x, y), R = ringGeom(orbitData.length, S);
+  let best = -1, bd = 14; orbitData.forEach((_, i) => { const dd = Math.abs(d - R(i)); if (dd < bd) { bd = dd; best = i; } });
+  orbitHover = best; $$(".mrow").forEach(rw => rw.classList.toggle("hl", +rw.dataset.i === best));
+  if (best >= 0) { const m = orbitData[best]; setCenter({l:m.done ? "Reached" : pct(m.prog, 1) + " there", v:compact(m.target), n:m.name}); } else renderCenterDefault();
+  if (reduce) drawOrbit();
+});
+cvs.addEventListener("pointerleave", () => { orbitHover = -1; $$(".mrow").forEach(rw => rw.classList.remove("hl")); renderCenterDefault(); if (reduce) drawOrbit(); });
+
+/* milestone + badge toasts */
+let prevAch = null;
+function checkAchievements() {
+  const nowSet = new Set([...allMilestones().filter(m => m.done).map(m => "m:" + m.id), ...achievements().filter(a => a.on).map(a => "a:" + a.k)]);
+  if (prevAch) {
+    for (const k of nowSet) if (!prevAch.has(k)) {
+      if (k.startsWith("m:")) { const m = allMilestones().find(x => "m:" + x.id === k); if (m) toast(`Milestone reached · ${m.name}`, 100); }
+      else { const a = achievements().find(x => "a:" + x.k === k); if (a) toast(`Badge unlocked · ${a.n}`, 50); }
+    }
+  }
+  prevAch = nowSet;
+}
+
+/* ─────────── encyclopedia ─────────── */
+const TERMS = [
+ ["Net worth","Basics","Everything you own minus everything you owe. It's the single best scoreboard for your finances.","$68,900 in assets − $27,450 in debts = $41,450 net worth."],
+ ["Asset","Basics","Anything you own that has money value: cash, investments, retirement accounts, a home, a car.","Your 401(k) balance and the resale value of your car are both assets."],
+ ["Liability","Debt","Money you owe someone else: credit cards, student loans, car loans, mortgages.","A $7,800 car loan is a liability, even though the car itself is an asset."],
+ ["Cash flow","Basics","Money coming in minus money going out each month. Positive cash flow is the fuel for saving and investing.","Take-home $4,500, spend $3,600: your cash flow is +$900 a month."],
+ ["Savings rate","Basics","The share of your take-home pay you keep instead of spend. It's the biggest lever you control early on.","Saving $900 of $4,500 a month is a 20% savings rate."],
+ ["Emergency fund","Basics","Cash set aside for surprises like a job loss or car repair, commonly 3 to 6 months of spending, kept somewhere safe and easy to reach.","Spending $3,200/mo means a 6-month fund of $19,200."],
+ ["Liquidity","Basics","How quickly something turns into cash without losing value.","Checking is very liquid. A house can take months to sell."],
+ ["Compound interest","Investing","Earning returns on your past returns, so growth speeds up over time.","$10,000 at 7% grows to about $19,700 in 10 years and $76,100 in 30."],
+ ["Rule of 72","Investing","Divide 72 by a yearly growth rate to estimate how many years it takes to double.","At 8% a year, money doubles in about 9 years (72 ÷ 8)."],
+ ["Inflation","Basics","The general rise in prices over time, which shrinks what each dollar buys.","At 3% inflation, prices roughly double every 24 years."],
+ ["Purchasing power","Basics","How much a dollar can actually buy. Inflation lowers it; growth faster than inflation raises yours.","$100 in cash today buys about $41 of today's goods after 30 years of 3% inflation."],
+ ["Nominal return","Investing","An investment's return before adjusting for inflation. It's the number most statements show.","Your fund says +9% this year. That's nominal."],
+ ["Real return","Investing","Your return after subtracting inflation: the growth in what you can actually buy.","7% nominal with 3% inflation is roughly a 4% real return."],
+ ["Stock","Investing","A small slice of ownership in a company. Its price rises and falls with the company and the market.","One share of a company makes you a part-owner, entitled to a sliver of its profits."],
+ ["Bond","Investing","A loan you make to a government or company that pays you interest. Usually steadier than stocks, with lower long-run returns.","A 10-year Treasury bond pays fixed interest twice a year until it matures."],
+ ["Index fund","Investing","A fund that holds every company in a market index, like the S&P 500, so you own the whole market at low cost.","One S&P 500 index fund gives you a piece of 500 large US companies."],
+ ["ETF","Investing","Exchange-traded fund: a basket of investments that trades like a single stock during the day. Many index funds are ETFs.","Buying one share of a total-market ETF spreads your money across thousands of companies."],
+ ["Expense ratio","Investing","The yearly fee a fund charges, as a percent of what you hold. Small differences compound into big ones.","0.03% on $10,000 costs $3 a year. 1% costs $100."],
+ ["Diversification","Strategy","Spreading money across many investments so one failure can't sink you.","Owning 3,000 companies instead of 3 means one bankruptcy barely registers."],
+ ["Asset allocation","Strategy","Your mix of stocks, bonds and cash. It drives most of your risk and most of your return.","90% stocks / 10% bonds is an aggressive mix many people use in their 20s."],
+ ["Rebalancing","Strategy","Trimming what grew and adding to what lagged, to return to your target mix.","Stocks rallied and you're now 95/5. Selling some stocks brings you back to 90/10."],
+ ["Dollar-cost averaging","Strategy","Investing a fixed amount on a schedule regardless of price, so you automatically buy more shares when prices are low.","$500 into an index fund every payday, no matter what the news says."],
+ ["Volatility","Investing","How much and how fast prices swing. More volatility means a bumpier ride, not necessarily a worse result.","Stocks can fall 20% in a year and still beat bonds over 20 years."],
+ ["Bull and bear market","Investing","A bull market is a long run of rising prices. A bear market is a fall of 20% or more from a recent high.","The 2022 drop in US stocks was a bear market; the rally after was a bull market."],
+ ["Dividend","Investing","Cash a company pays its shareholders out of profits, often every quarter.","A $100 stock paying a 2% dividend sends you $2 a year per share."],
+ ["Capital gains","Investing","Profit from selling something for more than you paid. In the US, gains on assets held over a year are usually taxed at lower long-term rates.","Buy at $1,000, sell at $1,500: a $500 capital gain."],
+ ["401(k)","Accounts","A US workplace retirement account. Traditional contributions lower your taxable income now; many employers add a match.","Contributing $500 a month from each paycheck before taxes."],
+ ["Employer match","Accounts","Money your employer adds when you contribute to your 401(k). It's an instant return, so capture all of it first.","A 50% match on the first 6% of a $60K salary is $1,800 a year of free money."],
+ ["Roth IRA","Accounts","A retirement account funded with after-tax money. Growth and qualified withdrawals in retirement are tax-free.","$7,000 a year from age 25 to 65 at 7% grows to roughly $1.4M, all tax-free."],
+ ["Traditional IRA","Accounts","A retirement account where contributions may be tax-deductible now, and withdrawals are taxed later as income.","Useful when you expect a lower tax rate in retirement than you have today."],
+ ["HSA","Accounts","Health savings account, paired with a high-deductible health plan. Money goes in pre-tax, grows tax-free, and comes out tax-free for medical costs.","Many people invest their HSA and treat it as a stealth retirement account."],
+ ["Tax-advantaged account","Accounts","Any account with tax perks for saving: 401(k), IRA, HSA, 529 college plans.","The same 7% return compounds faster when taxes don't skim it every year."],
+ ["APR vs APY","Debt","APR is the yearly rate without compounding. APY includes compounding. Compare savings accounts by APY and loans by APR.","A card with 24% APR actually costs about 26.8% a year if interest compounds monthly."],
+ ["Credit score","Debt","A 300 to 850 number lenders use to judge how risky you are. On-time payments and low balances matter most.","Going from 680 to 760 can cut tens of thousands off the interest on a mortgage."],
+ ["Credit utilization","Debt","Your card balances divided by your total credit limits. Lower is better for your score.","$1,250 owed on $10,000 of limits is 12.5% utilization."],
+ ["Amortization","Debt","Paying off a loan in equal installments. Early payments are mostly interest; later ones are mostly principal.","On a 30-year mortgage, most of the first year's payments go to interest."],
+ ["Principal","Debt","The original amount borrowed or invested, separate from the interest.","Pay $50 extra toward principal and you stop paying interest on that $50."],
+ ["Home equity","Basics","Your home's value minus what you still owe on it.","A $400K home with a $300K mortgage gives you $100K of equity."],
+ ["Opportunity cost","Strategy","What you give up by choosing one use of money over another.","$5,000 spent today is about $38,000 not earned if it had been invested at 7% for 30 years."],
+ ["Lifestyle creep","Strategy","Spending that rises as income rises, so your savings never grow.","A $10K raise that becomes a $10K nicer car payment."],
+ ["FIRE","Strategy","Financial Independence, Retire Early: saving aggressively until your investments can cover your living costs.","Saving 50% of income can mean financial independence in roughly 17 years."],
+ ["4% rule","Strategy","A rule of thumb: withdraw 4% of your portfolio in year one, then adjust for inflation. Historically that has lasted about 30 years.","A $1M portfolio supports about $40,000 a year of spending."],
+ ["FI number","Strategy","The amount you need to live off your investments: roughly 25 times your yearly spending, the flip side of the 4% rule.","Spending $38,400 a year means an FI number of $960,000."],
+ ["Sequence-of-returns risk","Strategy","The danger of a market crash right when you start withdrawing, which can drain a portfolio faster than the same crash later.","Retiring into a bear market is riskier than retiring into a bull market with the same average return."],
+ ["Vesting","Accounts","When employer contributions or company equity become fully yours, often over several years.","A 4-year vesting schedule gives you 25% of your stock options each year."],
+].map(([n, c, d, e]) => ({k:n.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), n, c, d, e}));
+const CATS = ["All", "Basics", "Investing", "Accounts", "Debt", "Strategy"];
+let cat = "All", open = null;
+$("#catChips").innerHTML = CATS.map(c => `<button type="button" data-c="${c}" class="${c === cat ? "on" : ""}">${c}</button>`).join("");
+$("#catChips").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; cat = b.dataset.c; $$("#catChips button").forEach(x => x.classList.toggle("on", x === b)); renderTerms(); });
+$("#q").addEventListener("input", () => renderTerms());
+function renderTerms() {
+  const q = $("#q").value.trim().toLowerCase();
+  const list = TERMS.filter(t => (cat === "All" || t.c === cat) && (!q || (t.n + " " + t.d + " " + t.e).toLowerCase().includes(q)));
+  $("#terms").innerHTML = list.map(t => { const L = state.learned[t.k]?.box >= 1; return `<div class="term ${L ? "learned" : ""} ${open === t.k ? "open" : ""}" data-k="${t.k}" role="button" tabindex="0" aria-expanded="${open === t.k}">
+    <div class="tt"><span class="tn">${esc(t.n)}</span><span class="mk">${L ? "■ Learned" : esc(t.c)}</span></div>
+    <div class="def">${esc(t.d)}</div><div class="ex"><span class="lbl">Example</span><br>${esc(t.e)}</div>
+    <div class="lrn"><button class="btn sm ${L ? "ghost" : "solid"}" type="button" data-learn="${t.k}">${L ? "Mark as not learned" : "I know this · +10 XP"}</button></div></div>`; }).join("") || `<div style="padding:24px;color:var(--muted)">No terms match "${esc(q)}".</div>`;
+  const boxes = [0, 1, 2, 3].map(b => TERMS.filter(t => (state.learned[t.k]?.box || 0) === b).length);
+  $("#boxes").innerHTML = ["New", "Box 1", "Box 2", "Mastered"].map((l, i) => `<div><div class="v">${boxes[i]}</div><div class="lbl" style="font-size:9px">${l}</div></div>`).join("");
+  $("#learnCount").textContent = `${learnedCount()} of ${TERMS.length} learned`;
+}
+$("#terms").addEventListener("click", e => {
+  const lb = e.target.closest("[data-learn]");
+  if (lb) { e.stopPropagation(); const k = lb.dataset.learn; touch(); if (state.learned[k]?.box >= 1) delete state.learned[k]; else state.learned[k] = {box:1}; renderTerms(); changed(true); return; }
+  const t = e.target.closest(".term"); if (!t) return; open = open === t.dataset.k ? null : t.dataset.k; renderTerms();
+});
+$("#terms").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("term")) { e.preventDefault(); e.target.click(); } });
+/* recall: Leitner-style, lower boxes come up more often */
+let cardTerm = null;
+function nextCard() {
+  const weights = TERMS.map(t => [t, [8, 4, 2, 1][state.learned[t.k]?.box || 0]]).filter(([t]) => t !== cardTerm);
+  let r = Math.random() * weights.reduce((s, [, w]) => s + w, 0);
+  for (const [t, w] of weights) { if ((r -= w) <= 0) { cardTerm = t; break; } }
+  $("#card").classList.remove("flip");
+  setTimeout(() => { $("#cardQ").textContent = cardTerm.n; $("#cardA").textContent = cardTerm.d; $("#cardCat").textContent = `${cardTerm.c} · ${["New", "Box 1", "Box 2", "Mastered"][state.learned[cardTerm.k]?.box || 0]}`; $("#cardCat2").textContent = cardTerm.n; }, reduce ? 0 : 250);
+}
+$("#card").onclick = () => $("#card").classList.toggle("flip");
+$("#cardGot").onclick = () => { touch(); const b = state.learned[cardTerm.k]?.box || 0; state.learned[cardTerm.k] = {box:Math.min(3, b + 1)}; if (b === 0) toast(`Learned · ${cardTerm.n}`, 10); renderTerms(); changed(true); nextCard(); };
+$("#cardAgain").onclick = () => { touch(); const b = state.learned[cardTerm.k]?.box || 0; if (b > 1) state.learned[cardTerm.k] = {box:b - 1}; renderTerms(); changed(true); nextCard(); };
+
+/* ─────────── agent ─────────── */
+let sample = null, chat = [], busy = false, ctl = null;
+const SUGS = ["How do I get to $100K net worth fastest?", "Should I pay off my student loan or invest?", "Is my emergency fund big enough?", "Explain my FI number like I'm new to this", "Set me a milestone for a house down payment"];
+$("#sugs").innerHTML = SUGS.map(s => `<button type="button">${esc(s)}<span class="mono">→</span></button>`).join("");
+$("#sugs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || busy || !sample) return; $("#ask").value = b.firstChild.textContent; send(); });
+function md(t) {
+  const lines = esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split(/\n/);
+  let html = "", inList = false;
+  for (const ln of lines) {
+    const li = ln.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/);
+    if (li) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${li[1]}</li>`; continue; }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (ln.trim()) html += `<p>${ln.replace(/^#+\s*/, "")}</p>`;
+  }
+  return html + (inList ? "</ul>" : "");
+}
+function renderChat(streamText) {
+  const log = $("#log");
+  if (!chat.length && streamText == null) {
+    log.innerHTML = sample ? `<div class="msg"><div class="lbl who">Agent</div><div class="body"><p>I can see your ledger, plan and milestones. Ask me what to do next, or what any of it means.</p></div></div>`
+      : `<div class="msg"><div class="lbl who">Agent · offline</div><div class="body"><p>The agent runs when this page is open in Claude. Everything else on the page works here.</p></div></div>`;
+    return;
+  }
+  log.innerHTML = chat.map(m => `<div class="msg ${m.role}"><div class="lbl who">${m.role === "user" ? "You" : "Agent"}</div><div class="body">${m.role === "user" ? esc(m.content) : md(m.content)}</div>${(m.acts || []).map(a => `<div class="act">${esc(a)}</div>`).join("")}</div>`).join("")
+    + (streamText != null ? `<div class="msg"><div class="lbl who">Agent</div><div class="body cursor">${streamText ? md(streamText) : `<p style="color:var(--muted)">Thinking</p>`}</div></div>` : "");
+  log.scrollTop = log.scrollHeight;
+}
+function context() {
+  const t = totals();
+  return {today:mlabel(THIS_MONTH), age:state.profile.age, monthlySpending:state.profile.exp, monthlySavingInvesting:state.profile.save,
+    assets:state.assets.map(a => ({name:a.name, type:ASSET_CATS[a.cat], value:a.value})), liabilities:state.liabilities.map(l => ({name:l.name, type:LIAB_CATS[l.cat], value:l.value})),
+    totals:{assets:t.a, liabilities:t.l, netWorth:t.nw}, fiNumber:fiNumber(), loggingStreakMonths:streak(),
+    netWorthHistory:state.history.slice(-12).map(h => ({month:h.m, netWorth:h.a - h.l})),
+    plan:state.plan, milestones:allMilestones().map(m => ({name:m.name, target:m.target, tracks:m.kind, progress:Math.round(m.prog * 100) + "%"})),
+    level:xpInfo().name, termsLearned:learnedCount(), usingExampleNumbers:state.example};
+}
+const SYSTEM = `You are the planning agent inside Wealth Effect, a personal finance app. You coach one person using their real numbers, given below as JSON.
+Style: plain English for a non-expert, energetic and encouraging, concise (under 180 words unless asked for more). Use short paragraphs and "- " bullets. Use **bold** for key numbers. No headings, no tables, no emoji.
+Give concrete numbers from their data. When you use a financial term, define it in a few words. You are educational, not a licensed advisor; mention that only when a question truly needs a professional (taxes, legal, specific securities).
+Tools: run_projection to compute growth; add_milestone when they ask for a goal or clearly want one tracked; update_plan to change the planner. Tell them what you changed.`;
+const TOOLS = [
+  {name:"run_projection", description:"Projects compound growth with monthly contributions. Returns the nominal and inflation-adjusted value per 5-year step and at the end.",
+    inputSchema:{type:"object", properties:{start:{type:"number"}, monthly:{type:"number"}, ratePct:{type:"number"}, years:{type:"number"}, inflationPct:{type:"number"}}, required:["monthly", "ratePct", "years"]},
+    execute(i) { const st = Number(i.start ?? totals().nw), y = clamp(Math.round(Number(i.years)), 1, 70), inf = Number(i.inflationPct ?? 3); const v = project(st, Number(i.monthly) || 0, Number(i.ratePct) || 0, y); return {byYear:v.map((x, k) => ({year:NOW.getFullYear() + k, nominal:Math.round(x), todaysDollars:Math.round(x / Math.pow(1 + inf / 100, k))})).filter((_, k) => k % 5 === 0 || k === y), totalContributed:Math.round(st + (Number(i.monthly) || 0) * 12 * y)}; }},
+  {name:"add_milestone", description:"Adds a milestone ring to the user's Milestones section. kind is 'nw' (net worth), 'cash' or 'invest'. Returns confirmation.",
+    inputSchema:{type:"object", properties:{name:{type:"string"}, target:{type:"number"}, kind:{type:"string", enum:["nw", "cash", "invest"]}}, required:["name", "target"]},
+    execute(i) { const target = Number(i.target); if (!(target > 0)) throw new Error("target must be positive"); const name = String(i.name || "Milestone").slice(0, 60); const kind = ["nw", "cash", "invest"].includes(i.kind) ? i.kind : "nw"; touch(); state.milestones.push({id:uid(), name, target, kind, custom:true}); pendingActs.push(`Added milestone · ${name} · ${compact(target)}`); changed(true); return "added"; }},
+  {name:"update_plan", description:"Updates the Flight plan calculator. Any of monthly, ratePct, years, goal, inflationPct. Returns the new plan.",
+    inputSchema:{type:"object", properties:{monthly:{type:"number"}, ratePct:{type:"number"}, years:{type:"number"}, goal:{type:"number"}, inflationPct:{type:"number"}}},
+    execute(i) { const p = state.plan; touch(); if (i.monthly != null) p.monthly = clamp(Number(i.monthly) || 0, 0, 1e6); if (i.ratePct != null) p.rate = clamp(Number(i.ratePct) || 0, 0, 30); if (i.years != null) p.years = clamp(Math.round(Number(i.years)), 1, 60); if (i.goal != null) p.goal = Math.max(1, Number(i.goal) || 1); if (i.inflationPct != null) p.infl = clamp(Number(i.inflationPct) || 0, 0, 20); syncPlanInputs(); renderPlan(); save(); pendingActs.push("Updated your flight plan"); return p; }},
+];
+let pendingActs = [];
+async function send() {
+  const q = $("#ask").value.trim(); if (!q || busy || !sample) return;
+  busy = true; $("#askBtn").textContent = "Stop"; $("#ask").value = "";
+  chat.push({role:"user", content:q}); renderChat("");
+  let hist = chat.slice(-10); while (hist.length && hist[0].role !== "user") hist = hist.slice(1);
+  const turns = hist.map((m, i, arr) => ({role:m.role, content:i === arr.length - 1 ? `${SYSTEM}\n\nTheir data right now:\n${JSON.stringify(context())}\n\nTheir question:\n${m.content}` : m.content}));
+  ctl = new AbortController(); pendingActs = [];
+  try {
+    const {text, truncated} = await sample(turns, {signal:ctl.signal, tools:TOOLS, onText:({text}) => renderChat(text)});
+    chat.push({role:"assistant", content:text + (truncated ? "\n\n(Cut short. Ask me to continue.)" : ""), acts:pendingActs});
+    if (!state.flags.asked) { state.flags.asked = true; changed(true); }
+  } catch (e) {
+    const msg = {cancelled:"Stopped.", not_granted:"The agent needs your permission to run. Allow it from the artifact's permissions and ask again.", rate_limited:"Too many questions at once. Wait a moment, then ask again.", refused:"I can't help with that one. Try asking another way."}[e?.code] || "Something went wrong reaching Claude. Ask again in a moment.";
+    chat.push({role:"assistant", content:(e?.text ? e.text + "\n\n" : "") + msg, acts:pendingActs});
+    if (e?.code === "not_granted") { sample = null; setAgentAvailable(false); }
+  } finally { busy = false; $("#askBtn").textContent = "Send"; renderChat(); }
+}
+$("#compose").addEventListener("submit", e => { e.preventDefault(); if (busy) { ctl?.abort(); return; } send(); });
+$("#ask").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#compose").requestSubmit(); } });
+$("#ask").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(140, e.target.scrollHeight) + "px"; });
+$("#clearChat").onclick = () => { ctl?.abort(); chat = []; renderChat(); };
+function setAgentAvailable(on) { $("#ask").disabled = !on; $("#askBtn").disabled = !on; $$("#sugs button").forEach(b => b.disabled = !on); $("#ask").placeholder = on ? "How do I get to $100K fastest?" : "Open this page in Claude to ask the agent"; }
+setAgentAvailable(false);
+(async () => { try { sample = await window.claude?.use?.("sample"); } catch { sample = null; } setAgentAvailable(!!sample); renderChat(); })();
+
+/* ─────────── boot ─────────── */
+function renderAll() { syncPlanInputs(); syncPPInputs(); renderLedger(); renderOverview(); renderPlan(); renderPower(); renderMilestones(); renderTerms(); checkAchievements(); }
+renderAll(); nextCard(); renderChat();
+let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { renderOverview(); renderPlan(); renderPower(); drawOrbit(); }, 120); }).observe(document.body);
+})();
+</script>
