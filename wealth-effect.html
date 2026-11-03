@@ -2,37 +2,42 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout: mission-control ledger. Hairline grid, mono telemetry labels, one oversized grotesk number per view. Grayscale UI; color lives only inside charts. */
+/* Layout: aerospace spec sheet. Full-bleed solid rules, wide-tracked bold labels, a dark wireframe band, one oversized grotesk number per view. Grayscale UI; color lives only inside charts. */
 :root{
-  --bg:#F1F2F2; --surface:#F8F8F8; --fg:#0C0D0E; --fg2:#3B3E42; --muted:#767B81;
-  --line:rgba(12,13,14,.11); --line2:rgba(12,13,14,.3); --grid:rgba(12,13,14,.05); --inv:#F8F8F8;
+  --bg:#F1F1F1; --surface:#F1F1F1; --hover:#E7E7E7; --fg:#1E1E1E; --fg2:#2F2F2F; --muted:#6C6C6C;
+  --line:#1E1E1E; --line2:#1E1E1E; --hair:rgba(30,30,30,.13); --inv:#F1F1F1;
+  --band:#202020; --bandfg:#EDEDED; --bandmuted:#8A8A8A;
   --c1:#2D62EE; --c2:#0A9682; --c3:#D64B2C; --c4:#C2840A; --c5:#7655D4;
   --display:"Geist","Helvetica Neue",Helvetica,Arial,sans-serif;
   --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --ease:cubic-bezier(.2,.7,.1,1);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#090A0B; --surface:#0F1112; --fg:#ECEDEE; --fg2:#BBBFC3; --muted:#82888E;
-  --line:rgba(236,237,238,.1); --line2:rgba(236,237,238,.3); --grid:rgba(236,237,238,.04); --inv:#090A0B;
+  --bg:#141414; --surface:#141414; --hover:#1C1C1C; --fg:#E9E9E9; --fg2:#CDCDCD; --muted:#8E8E8E;
+  --line:rgba(233,233,233,.55); --line2:rgba(233,233,233,.7); --hair:rgba(233,233,233,.1); --inv:#141414;
+  --band:#080808; --bandfg:#E9E9E9; --bandmuted:#7C7C7C;
   --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#090A0B; --surface:#0F1112; --fg:#ECEDEE; --fg2:#BBBFC3; --muted:#82888E;
-  --line:rgba(236,237,238,.1); --line2:rgba(236,237,238,.3); --grid:rgba(236,237,238,.04); --inv:#090A0B;
+  --bg:#141414; --surface:#141414; --hover:#1C1C1C; --fg:#E9E9E9; --fg2:#CDCDCD; --muted:#8E8E8E;
+  --line:rgba(233,233,233,.55); --line2:rgba(233,233,233,.7); --hair:rgba(233,233,233,.1); --inv:#141414;
+  --band:#080808; --bandfg:#E9E9E9; --bandmuted:#7C7C7C;
   --c1:#6F96FF; --c2:#2EC6AE; --c3:#FF7A5A; --c4:#F0B23E; --c5:#A68AFF; color-scheme:dark}
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:64px}
-body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:16px;line-height:1.5;letter-spacing:.018em;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01"}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 ::selection{background:var(--fg);color:var(--inv)}
 .wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .mono,.lbl{font-family:var(--mono)}
-.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--fg)}
+.eyebrow{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:.26em;text-transform:uppercase}
+.spec{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
 .num{font-variant-numeric:tabular-nums}
-h1,h2,h3{font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.03em}
-h2{font-size:clamp(30px,4.4vw,52px);line-height:1.02}
+h1,h2,h3{font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.035em}
+h2{font-size:clamp(32px,5vw,64px);line-height:1}
 h3{font-size:18px;letter-spacing:-.01em;font-weight:500}
 p{margin:0}
 a{color:inherit}
@@ -40,20 +45,27 @@ button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:1px solid var(--fg);outline-offset:3px}
 
 /* ——— top bar ——— */
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.bar .wrap{display:flex;align-items:center;gap:20px;height:56px}
-.logo{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
-.logo i{width:10px;height:10px;border:1px solid var(--fg);display:inline-block;position:relative}
-.logo i::after{content:"";position:absolute;inset:2px;background:var(--fg);animation:blink 2.4s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:stretch;gap:20px;height:72px;max-width:none;padding-right:0}
+.logo{font-family:var(--display);font-size:20px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-decoration:none;display:flex;align-items:center;gap:12px;white-space:nowrap}
+.logo svg{width:30px;height:18px;flex:none}
+.nav{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;justify-content:flex-end}
 .nav::-webkit-scrollbar{display:none}
-.nav a{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:8px 10px;white-space:nowrap;transition:color .2s}
+.nav a{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:8px 10px;white-space:nowrap;transition:color .2s}
 .nav a:hover,.nav a.on{color:var(--fg)}
-.nav a.on::before{content:"■ ";font-size:8px;vertical-align:1px}
-.lvchip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line2);padding:6px 10px;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none}
-.lvchip b{font-weight:500}
-@media (max-width:720px){.lvchip .lvname{display:none}.logo span{display:none}}
+.lvchip{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:0 20px;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none;border-left:1px solid var(--line)}
+.menuBtn{width:max(72px,calc(56px + env(safe-area-inset-right,0px)));padding-right:env(safe-area-inset-right,0px);border:0;border-left:1px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center;flex:none}
+.menuBtn span{display:block;width:30px;height:1.5px;background:var(--fg);box-shadow:0 -7px 0 var(--fg),0 7px 0 var(--fg);transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.menuOpen .menuBtn span{box-shadow:0 0 0 var(--fg),0 0 0 var(--fg);transform:rotate(45deg)}
+.menuOpen .menuBtn span::after{content:"";display:block;width:30px;height:1.5px;background:var(--fg);transform:rotate(-90deg)}
+.menu{position:fixed;inset:calc(72px + env(safe-area-inset-top,0px)) 0 0;z-index:29;background:var(--bg);display:flex;flex-direction:column;overflow-y:auto;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);padding-bottom:env(safe-area-inset-bottom,0px)}
+.menuOpen .menu{opacity:1;transform:none;pointer-events:auto}
+.menu a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;border-bottom:1px solid var(--line);padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.menu a:hover{background:var(--hover)}
+.menu a .arr{font-family:var(--mono);transition:transform .3s var(--ease)}
+.menu a:hover .arr{transform:translateX(6px)}
+@media (max-width:1100px){.nav{display:none}.bar .wrap{justify-content:space-between}}
+@media (max-width:720px){.lvchip .lvname{display:none}.lvchip{padding:0 14px}.logo{font-size:17px}}
 
 /* ——— buttons & inputs ——— */
 .btn{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;border:1px solid var(--fg);background:linear-gradient(var(--fg),var(--fg)) no-repeat left/0% 100%;color:var(--fg);padding:11px 16px;cursor:pointer;border-radius:0;transition:background-size .35s var(--ease),color .35s var(--ease);display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
@@ -77,26 +89,27 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--fg);
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.4) rotate(45deg)}
 
 /* ——— sections ——— */
-section{border-top:1px solid var(--line);padding-block:72px}
-.shead{display:grid;grid-template-columns:220px 1fr;gap:24px;margin-bottom:40px}
-.shead .lbl{padding-top:10px}
-.shead p.lede{color:var(--fg2);max-width:62ch;margin-top:14px;font-size:16px}
-@media (max-width:820px){.shead{grid-template-columns:1fr;gap:10px}section{padding-block:52px}}
+section{border-top:1px solid var(--line);padding-block:96px}
+.shead{display:flex;flex-direction:column;gap:28px;margin-bottom:56px;max-width:820px}
+.shead p.lede{margin-top:24px;color:var(--fg2);max-width:58ch;font-size:clamp(17px,1.6vw,20px);line-height:1.45}
+@media (max-width:820px){.shead{gap:22px;margin-bottom:40px}section{padding-block:64px}}
 
 .panel{position:relative;border:1px solid var(--line);background:var(--surface)}
-.panel.corners::before,.panel.corners::after{content:"";position:absolute;width:9px;height:9px;border:1px solid var(--fg);pointer-events:none}
-.panel.corners::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.panel.corners::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
-.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .seg{display:inline-flex;border:1px solid var(--line2)}
 .seg button{background:none;border:0;font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:6px 10px;color:var(--muted);cursor:pointer}
 .seg button.on{background:var(--fg);color:var(--inv)}
 
 /* ——— hero ——— */
-.hero{border-top:0;padding-block:40px 56px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;mask-image:linear-gradient(180deg,#000 40%,transparent)}
+.hero{border-top:0;padding-block:0 72px;position:relative}
 .hero .wrap{position:relative}
-.telemetry{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.band{background:var(--band);color:var(--bandfg);position:relative;border-bottom:1px solid var(--line);margin-bottom:56px}
+.band canvas{display:block;width:100%;height:clamp(340px,46vw,520px)}
+.band .tele{position:absolute;inset:0 0 auto;padding-block:18px}
+.band .cap{position:absolute;inset:auto 0 0;padding-block:18px}
+.band .lbl{color:var(--bandmuted)}
+.band .cap .lbl{color:var(--bandfg)}
+.telemetry{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .telemetry span{white-space:nowrap}
 .heroGrid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:28px;align-items:end}
 @media (max-width:960px){.heroGrid{grid-template-columns:1fr}}
@@ -106,10 +119,10 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .delta{font-family:var(--mono);font-size:12px;display:flex;gap:8px;align-items:baseline}
 .delta b{font-weight:500;color:var(--fg)}
 .readouts{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}
-.ro{padding:14px 14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
-.ro .v{font-size:22px;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro{padding:16px 16px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.ro .v{font-size:24px;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ro .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
-.meter{height:3px;background:var(--line);margin-top:10px;position:relative;overflow:hidden}
+.meter{height:3px;background:var(--hair);margin-top:10px;position:relative;overflow:hidden}
 .meter i{position:absolute;inset:0 auto 0 0;background:var(--fg);transition:width .9s var(--ease)}
 .example{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line2);padding:10px 14px;margin-bottom:28px;font-size:14px;color:var(--fg2)}
 .example .lbl{color:var(--fg)}
@@ -119,8 +132,8 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .chart{position:relative;width:100%;touch-action:pan-y}
 .chart svg{display:block;width:100%;overflow:visible}
 .chart .axis{font-family:var(--mono);font-size:10px;fill:var(--muted)}
-.chart .gl{stroke:var(--line);stroke-width:1}
-.chart .gl0{stroke:var(--line2)}
+.chart .gl{stroke:var(--hair);stroke-width:1}
+.chart .gl0{stroke:var(--fg);stroke-opacity:.5}
 .chart .draw{animation:draw 1.6s var(--ease) both}
 .chart .fade{animation:fadein 1.2s .4s var(--ease) both}
 @keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
@@ -139,9 +152,9 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .ledger{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media (max-width:900px){.ledger{grid-template-columns:1fr}}
 .rows{display:flex;flex-direction:column}
-.row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 32px;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line);align-items:center}
+.row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 32px;gap:8px;padding:8px 16px;border-bottom:1px solid var(--hair);align-items:center}
 .row .in{border-color:transparent;padding:7px 6px}
-.row .in:hover{border-color:var(--line)}
+.row .in:hover{border-color:var(--hair)}
 .row .in:focus{border-color:var(--fg)}
 .row .val{text-align:right}
 .x{background:none;border:0;color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:14px;width:32px;height:32px}
@@ -177,7 +190,7 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .power{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
 @media (max-width:980px){.power{grid-template-columns:1fr}}
 .sentences{display:flex;flex-direction:column}
-.sentences p{padding:16px 20px;border-bottom:1px solid var(--line);font-size:16px;color:var(--fg2)}
+.sentences p{padding:18px 20px;border-bottom:1px solid var(--line);font-size:17px;color:var(--fg2)}
 .sentences p:last-child{border-bottom:0}
 .sentences b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
 .units{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);margin-top:24px}
@@ -190,7 +203,7 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .checker .in{width:150px}
 .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
 .item{padding:16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;min-width:0;transition:background .25s}
-.item:hover{background:var(--surface)}
+.item:hover{background:var(--hover)}
 .item .nm{font-size:16px;letter-spacing:-.01em}
 .item .pr{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .item .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto}
@@ -201,7 +214,7 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .pill.t2{border-style:dashed}
 .pill.t3{border-color:var(--line2);color:var(--muted)}
 .item .meter{margin-top:0}
-.item.custom{background:var(--surface)}
+.item.custom{background:var(--hover)}
 .src{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:12px;max-width:90ch}
 
 /* ——— milestones ——— */
@@ -214,13 +227,13 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .orbitCenter .n{font-size:13px;color:var(--fg2);margin-top:4px}
 .mlist{display:flex;flex-direction:column}
 .mrow{display:grid;grid-template-columns:14px minmax(0,1fr) auto 26px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);cursor:default;transition:background .2s}
-.mrow:hover,.mrow.hl{background:var(--bg)}
+.mrow:hover,.mrow.hl{background:var(--hover)}
 .mrow .sw{width:10px;height:10px}
 .mrow .nm{font-size:14px;min-width:0}
 .mrow .nm small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
 .mrow .pc{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap}
 .mrow.done .nm{text-decoration:line-through;text-decoration-color:var(--line2)}
-.mrow .bar2{grid-column:2/4;height:2px;background:var(--line);position:relative}
+.mrow .bar2{grid-column:2/4;height:2px;background:var(--hair);position:relative}
 .mrow .bar2 i{position:absolute;inset:0 auto 0 0;transition:width .8s var(--ease)}
 .addm{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;padding:14px 16px;align-items:end}
 @media (max-width:560px){.addm{grid-template-columns:1fr 1fr}.addm .field:first-child{grid-column:1/-1}.addm .btn{grid-column:1/-1;justify-content:center}}
@@ -229,7 +242,7 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .xpbar{height:6px;border:1px solid var(--line2);margin-top:10px;position:relative}
 .xpbar i{position:absolute;inset:0 auto 0 0;background:var(--fg);transition:width 1s var(--ease)}
 .ladder{display:flex;gap:4px;margin-top:10px}
-.ladder span{flex:1;height:4px;background:var(--line)}
+.ladder span{flex:1;height:4px;background:var(--hair)}
 .ladder span.on{background:var(--fg)}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0;border-top:1px solid var(--line)}
 .badge{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;min-width:0}
@@ -247,11 +260,11 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .chips button.on{background:var(--fg);color:var(--inv);border-color:var(--fg)}
 .search{display:flex;gap:8px;align-items:center;flex:1;min-width:220px;max-width:420px}
 .terms{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
-.term{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;min-width:0;transition:background .2s;text-align:left;background:none;border-top:0;border-left:0;font:inherit;color:inherit}
-.term:hover{background:var(--surface)}
+.term{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:24px 20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;min-width:0;transition:background .2s;text-align:left;background:none;border-top:0;border-left:0;font:inherit;color:inherit}
+.term:hover{background:var(--hover)}
 .term .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.term .tn{font-size:19px;letter-spacing:-.02em}
-.term .def{color:var(--fg2);font-size:14px}
+.term .tn{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.term .def{color:var(--fg2);font-size:15px}
 .term .ex{display:none;font-size:13px;color:var(--fg2);border-left:1px solid var(--fg);padding-left:10px;margin-top:4px}
 .term.open .ex{display:block}
 .term .lrn{display:none;margin-top:6px}
@@ -290,11 +303,13 @@ section{border-top:1px solid var(--line);padding-block:72px}
 .sugs{display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
 .sugs button{background:none;border:0;border-bottom:1px solid var(--line);text-align:left;padding:14px 16px;cursor:pointer;font-size:14px;color:var(--fg2);display:flex;justify-content:space-between;gap:10px;transition:background .2s,color .2s}
 .sugs button:last-child{border-bottom:0}
-.sugs button:hover{background:var(--surface);color:var(--fg)}
+.sugs button:hover{background:var(--hover);color:var(--fg)}
 .cursor::after{content:"▍";animation:blink 1s steps(1) infinite;margin-left:2px}
 
 /* ——— footer / toast ——— */
-footer{border-top:1px solid var(--line);padding-block:28px 40px}
+footer{background:var(--band);color:var(--bandfg);padding-block:56px calc(56px + env(safe-area-inset-bottom,0px))}
+footer .lbl{color:var(--bandfg)}
+footer .lbl+.lbl{color:var(--bandmuted)}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:40;pointer-events:none;max-width:calc(100% - 32px)}
 .toast{background:var(--fg);color:var(--inv);padding:12px 16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;animation:tin .5s var(--ease) both;display:flex;gap:12px;align-items:center}
@@ -305,7 +320,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 <header class="bar">
   <div class="wrap">
-    <a class="logo" href="#overview"><i></i><span>Wealth&nbsp;Effect</span></a>
+    <a class="logo" href="#overview"><svg viewBox="0 0 30 18" aria-hidden="true"><path d="M1 17 L8 9 L13 13 L22 3" style="fill:none;stroke:currentColor;stroke-width:1.6"/><path d="M17 3 H22 V8" style="fill:none;stroke:currentColor;stroke-width:1.6"/><path d="M1 17 H29" style="fill:none;stroke:currentColor;stroke-width:1.6"/></svg><span>Wealth Effect</span></a>
     <nav class="nav" id="nav">
       <a href="#overview">Net worth</a>
       <a href="#ledger">Ledger</a>
@@ -316,18 +331,28 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
       <a href="#agent">Agent</a>
     </nav>
     <a class="lvchip" href="#milestones" id="lvchip"><b>LV <span id="lvN">1</span></b><span class="lvname" id="lvName">Ground</span></a>
+    <button class="menuBtn" id="menuBtn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span></button>
   </div>
 </header>
+<nav class="menu" id="menu" aria-label="Sections">
+  <a href="#overview"><span class="spec">Net worth</span><span class="arr">→</span></a>
+  <a href="#ledger"><span class="spec">Ledger</span><span class="arr">→</span></a>
+  <a href="#plan"><span class="spec">Flight plan</span><span class="arr">→</span></a>
+  <a href="#power"><span class="spec">Purchasing power</span><span class="arr">→</span></a>
+  <a href="#milestones"><span class="spec">Milestones</span><span class="arr">→</span></a>
+  <a href="#learn"><span class="spec">Encyclopedia</span><span class="arr">→</span></a>
+  <a href="#agent"><span class="spec">Planning agent</span><span class="arr">→</span></a>
+</nav>
 
 <main>
 <!-- ═════════ OVERVIEW ═════════ -->
 <section class="hero" id="overview">
+  <div class="band">
+    <canvas id="wire" aria-label="Wireframe illustration: your asset stacks feed savings up to your goal"></canvas>
+    <div class="tele"><div class="wrap telemetry lbl"><span id="tmDate">—</span><span id="tmSync">Saved on this device</span><span id="tmXY">X 0000 · Y 0000</span></div></div>
+    <div class="cap"><div class="wrap telemetry lbl"><span id="capL">Uplink</span><span id="capR"></span></div></div>
+  </div>
   <div class="wrap">
-    <div class="telemetry lbl">
-      <span id="tmDate">—</span>
-      <span id="tmSync">Saved on this device</span>
-      <span id="tmXY">X 0000 · Y 0000</span>
-    </div>
     <div class="example" id="exampleBanner">
       <span class="lbl">[ Example numbers ]</span>
       <span style="flex:1;min-width:200px">Everything below runs on a sample 27-year-old's money. Swap in your own and the whole page recalculates.</span>
@@ -336,13 +361,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     </div>
     <div class="heroGrid">
       <div style="min-width:0">
-        <div class="lbl scr" style="margin-bottom:14px">[ Net worth ]</div>
+        <div class="eyebrow scr" style="margin-bottom:22px">Your net worth</div>
         <div class="big" id="heroNW"><span class="cur">$</span>0</div>
         <div class="deltas" id="heroDeltas"></div>
       </div>
       <div class="readouts" id="heroRO"></div>
     </div>
-    <div class="panel corners" style="margin-top:36px">
+    <div class="panel" style="margin-top:36px">
       <div class="phead">
         <div class="legend" id="nwLegend"></div>
         <div class="seg" id="nwRange"><button data-r="6">6M</button><button data-r="12">1Y</button><button data-r="0" class="on">All</button></div>
@@ -356,7 +381,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="ledger">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Ledger ]</div>
+      <div class="eyebrow scr">Your ledger</div>
       <div>
         <h2 class="scr">What you own, minus what you owe.</h2>
         <p class="lede">List every account and every debt. Log it once a month: each log becomes a point on your chart, builds your streak and earns XP.</p>
@@ -394,14 +419,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="plan">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Flight plan ]</div>
+      <div class="eyebrow scr">Flight plan</div>
       <div>
         <h2 class="scr">Set a goal. See the year you get there.</h2>
         <p class="lede">Drag the controls. Three paths show a cautious, expected and strong market. Switch to today's dollars to see what the money will actually buy.</p>
       </div>
     </div>
     <div class="plan">
-      <div class="panel ctrls corners">
+      <div class="panel ctrls">
         <div class="ctrl"><div class="top"><label class="lbl" for="cStart">Starting amount</label><input id="cStart" type="number" inputmode="numeric"></div>
           <label class="chk" for="cLink"><input type="checkbox" id="cLink" checked> Use my current net worth</label></div>
         <div class="ctrl"><div class="top"><label class="lbl" for="cMonthlyN">Monthly investing</label><input id="cMonthlyN" type="number" inputmode="numeric"></div><input type="range" id="cMonthly" min="0" max="10000" step="50"></div>
@@ -429,14 +454,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="power">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Purchasing power ]</div>
+      <div class="eyebrow scr">Purchasing power</div>
       <div>
         <h2 class="scr">A dollar is a promise that shrinks.</h2>
         <p class="lede">Inflation quietly eats cash. Money that grows faster than prices keeps its buying power. Every line below is in today's dollars.</p>
       </div>
     </div>
     <div class="power">
-      <div class="panel corners" style="min-width:0">
+      <div class="panel" style="min-width:0">
         <div class="phead"><div class="legend" id="ppLegend"></div><span class="lbl">Today's dollars</span></div>
         <div class="chart" id="ppChart" style="padding:12px 8px 6px"></div>
       </div>
@@ -454,7 +479,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <div class="shop">
       <div class="shopHead">
         <div>
-          <div class="lbl scr" style="margin-bottom:10px">[ What your net worth buys ]</div>
+          <div class="eyebrow scr" style="margin-bottom:16px">What your net worth buys</div>
           <h3 style="font-size:24px;letter-spacing:-.02em;font-weight:400">Rated by how much of your net worth each purchase takes.</h3>
         </div>
         <div class="checker"><label class="lbl" for="chkPrice">Check a price</label><input class="in" id="chkPrice" type="number" placeholder="$ 0" inputmode="numeric"></div>
@@ -469,14 +494,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="milestones">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Milestones ]</div>
+      <div class="eyebrow scr">Milestones</div>
       <div>
         <h2 class="scr">Every ring is a goal. Close them all.</h2>
         <p class="lede">Each orbit is a milestone, and the arc shows how far around you are. Hover or tap a ring to read it. Logging months, closing rings and learning terms all earn XP.</p>
       </div>
     </div>
     <div class="ms">
-      <div class="panel corners" style="padding:16px">
+      <div class="panel" style="padding:16px">
         <div class="orbitWrap" id="orbitWrap"><canvas id="orbit"></canvas>
           <div class="orbitCenter"><div class="lbl" id="ocL">Next milestone</div><div class="v" id="ocV">—</div><div class="n" id="ocN"></div></div>
         </div>
@@ -513,7 +538,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="learn">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Encyclopedia ]</div>
+      <div class="eyebrow scr">Encyclopedia</div>
       <div>
         <h2 class="scr">The words money people use, in plain English.</h2>
         <p class="lede">Tap any term to see an example. Use Recall to quiz yourself: terms you know move up a box and come back less often. Terms you miss come back sooner.</p>
@@ -548,14 +573,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="agent">
   <div class="wrap">
     <div class="shead">
-      <div class="lbl scr">[ Planning agent ]</div>
+      <div class="eyebrow scr">Planning agent</div>
       <div>
         <h2 class="scr">Ask anything about your money.</h2>
         <p class="lede">The agent reads your ledger, plan and milestones each time you ask. It can run projections, add milestones and update your plan for you. It teaches; it is not a licensed advisor.</p>
       </div>
     </div>
     <div class="agent">
-      <div class="panel corners" style="display:flex;flex-direction:column;min-width:0">
+      <div class="panel" style="display:flex;flex-direction:column;min-width:0">
         <div class="phead"><span class="lbl">Session</span><button class="btn sm ghost" id="clearChat">Clear</button></div>
         <div class="log" id="log"></div>
         <form class="compose" id="compose">
@@ -572,7 +597,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 </section>
 </main>
 
-<footer><div class="wrap lbl"><span>Wealth Effect · Education, not financial advice</span><span id="ftSave">Your data stays private to you</span></div></footer>
+<footer><div class="wrap"><span class="lbl">Wealth Effect · Education, not financial advice</span><span class="lbl" id="ftSave">Your data stays private to you</span></div></footer>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script>
@@ -907,7 +932,7 @@ function renderTotals() {
 }
 function touch() { if (state.example) { state.example = false; state.flags.keptExample = true; } }
 let rerenderTimer;
-function changed(full) { save(); clearTimeout(rerenderTimer); rerenderTimer = setTimeout(() => { renderOverview(); renderPlan(); renderPower(); renderMilestones(); checkAchievements(); }, full ? 0 : 160); }
+function changed(full) { save(); clearTimeout(rerenderTimer); rerenderTimer = setTimeout(() => { renderBandCaption(); if (reduce) drawWire(); renderOverview(); renderPlan(); renderPower(); renderMilestones(); checkAchievements(); }, full ? 0 : 160); }
 for (const id of ["#assetRows", "#liabRows"]) {
   $(id).addEventListener("input", e => {
     const row = e.target.closest(".row"); if (!row || !row.dataset.id) return;
@@ -953,7 +978,7 @@ function project(start, monthly, rate, years) {
 }
 function bindPair(rangeId, numId, get, set) {
   const r = $(rangeId), n = $(numId);
-  const upd = v => { set(v); r.value = v; n.value = v; touch(); renderPlan(); save(); };
+  const upd = v => { set(v); r.value = v; n.value = v; touch(); renderPlan(); renderBandCaption(); save(); };
   r.addEventListener("input", () => upd(+r.value)); n.addEventListener("change", () => upd(+n.value || 0));
   r.value = n.value = get();
 }
@@ -1120,12 +1145,12 @@ function drawOrbit(now = performance.now()) {
   const intro = reduce ? 1 : clamp((now - orbitT0) / 1800, 0, 1), ease = 1 - Math.pow(1 - intro, 3);
   const spin = reduce ? 0 : now / 9000;
   // crosshair
-  c.strokeStyle = line; c.lineWidth = 1; c.beginPath(); c.moveTo(cx, S * .02); c.lineTo(cx, S * .98); c.moveTo(S * .02, cy); c.lineTo(S * .98, cy); c.stroke();
-  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, r1 = S * .49, r2 = r1 - (k % 6 === 0 ? 8 : 4); c.beginPath(); c.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); c.strokeStyle = line2; c.stroke(); }
+  c.strokeStyle = cssVar("--hair"); c.lineWidth = 1; c.beginPath(); c.moveTo(cx, S * .02); c.lineTo(cx, S * .98); c.moveTo(S * .02, cy); c.lineTo(S * .98, cy); c.stroke();
+  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, r1 = S * .49, r2 = r1 - (k % 6 === 0 ? 8 : 4); c.beginPath(); c.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); c.strokeStyle = muted; c.stroke(); }
   orbitData.forEach((m, i) => {
     const r = R(i), col = cssVar(PAL[i % PAL.length]), hl = orbitHover === i, dim = orbitHover >= 0 && !hl;
     c.globalAlpha = dim ? .25 : 1;
-    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.strokeStyle = line2; c.lineWidth = 1; c.setLineDash([2, 4]); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.strokeStyle = cssVar("--hair"); c.lineWidth = 1; c.setLineDash([2, 4]); c.stroke(); c.setLineDash([]);
     const start = -Math.PI / 2, end = start + Math.PI * 2 * m.prog * ease;
     if (m.prog > 0) { c.beginPath(); c.arc(cx, cy, r, start, end); c.strokeStyle = col; c.lineWidth = hl ? 5 : 3; c.lineCap = "butt"; c.stroke(); }
     // satellite at arc tip
@@ -1323,9 +1348,110 @@ function setAgentAvailable(on) { $("#ask").disabled = !on; $("#askBtn").disabled
 setAgentAvailable(false);
 (async () => { try { sample = await window.claude?.use?.("sample"); } catch { sample = null; } setAgentAvailable(!!sample); renderChat(); })();
 
+
+/* ─────────── wireframe band: asset stacks on a globe, savings flowing up to the goal ─────────── */
+const wire = $("#wire"), wctx = wire.getContext("2d");
+let wireVisible = true;
+new IntersectionObserver(es => { wireVisible = es[0].isIntersecting; }).observe(wire);
+function wireScene() {
+  const cats = Object.keys(ASSET_CATS), vals = cats.map(byCat), mx = Math.max(1, ...vals);
+  const heights = vals.map(v => .12 + 1.5 * Math.sqrt(v / mx));
+  const prog = clamp(totals().nw / (state.plan.goal || 1), 0, 1);
+  const speed = .05 + .12 * Math.min(1, Math.log10(1 + (+state.plan.monthly || 0)) / 4);
+  return {heights, prog, speed};
+}
+function drawWire(now = performance.now()) {
+  const W = wire.clientWidth, H = wire.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  if (!W || !H) return;
+  if (wire.width !== Math.round(W * dpr) || wire.height !== Math.round(H * dpr)) { wire.width = Math.round(W * dpr); wire.height = Math.round(H * dpr); }
+  const c = wctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+  const fg = cssVar("--bandfg"), bandBg = cssVar("--band");
+  const sc = wireScene(), t = reduce ? 0 : now / 1000;
+  const ang = reduce ? -.5 : -.5 + Math.sin(t * .07) * .45, tilt = .32;
+  const unit = Math.min(H * .08, W / 9.5), D = 22, F = D * unit;
+  const cx = W * (W < 640 ? .5 : .56), cy = H * .77;
+  const ca = Math.cos(ang), sa = Math.sin(ang), ct = Math.cos(tilt), st = Math.sin(tilt);
+  const view = p => { const x = p[0] * ca - p[2] * sa, z0 = p[0] * sa + p[2] * ca, y = p[1]; return [x, y * ct - z0 * st, y * st + z0 * ct]; };
+  const P = p => { const v = view(p), s = F / (D - v[2]); return [cx + v[0] * s, cy - v[1] * s, v[2], s]; };
+  const poly = (pts, close) => { c.beginPath(); pts.forEach((p, i) => { const q = P(p); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }); if (close) c.closePath(); c.stroke(); };
+  c.lineWidth = 1; c.lineJoin = "round";
+  // globe cap
+  const R = 9, C = [0, -R - .05, 0], cam = [0, 0, D];
+  const sp = (la, lo) => [C[0] + R * Math.cos(la) * Math.cos(lo), C[1] + R * Math.sin(la), C[2] + R * Math.cos(la) * Math.sin(lo)];
+  const facing = (la, lo) => { const n = view([Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]), q = view(sp(la, lo)); return n[0] * (cam[0] - q[0]) + n[1] * (cam[1] - q[1]) + n[2] * (cam[2] - q[2]) > 0; };
+  const seg = (a, b) => { if (!facing(...a) || !facing(...b)) return; const p = P(sp(...a)), q = P(sp(...b)); c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(q[0], q[1]); c.stroke(); };
+  const LA = [], dLa = Math.PI / 36, dLo = Math.PI / 14, spinG = reduce ? 0 : t * .03;
+  for (let la = Math.PI / 2 - dLa; la > Math.PI / 2 - dLa * 9; la -= dLa) LA.push(la);
+  c.strokeStyle = fg; c.globalAlpha = .26;
+  for (let i = 0; i < LA.length; i++) for (let lo = 0; lo < Math.PI * 2 - 1e-6; lo += dLo) {
+    const L = lo + spinG;
+    seg([LA[i], L], [LA[i], L + dLo]);
+    if (i + 1 < LA.length) { seg([LA[i], L], [LA[i + 1], L]); seg([LA[i], L], [LA[i + 1], L + dLo]); }
+    else seg([LA[i], L], [LA[i] - dLa * 1.2, L]);
+  }
+  // platform slab with fence posts
+  const X0 = -2.5, X1 = 2.5, Z0 = -1.25, Z1 = 1.25, Y0 = 0, Y1 = .14, FY = .42;
+  c.globalAlpha = .55;
+  for (const y of [Y0, Y1]) poly([[X0, y, Z0], [X1, y, Z0], [X1, y, Z1], [X0, y, Z1]], true);
+  for (const [x, z] of [[X0, Z0], [X1, Z0], [X1, Z1], [X0, Z1]]) poly([[x, Y0, z], [x, Y1, z]]);
+  c.globalAlpha = .3;
+  poly([[X0, FY, Z0], [X1, FY, Z0], [X1, FY, Z1], [X0, FY, Z1]], true);
+  for (let x = X0; x <= X1 + 1e-6; x += .25) { poly([[x, Y1, Z0], [x, FY, Z0]]); poly([[x, Y1, Z1], [x, FY, Z1]]); }
+  for (let z = Z0; z <= Z1 + 1e-6; z += .25) { poly([[X0, Y1, z], [X0, FY, z]]); poly([[X1, Y1, z], [X1, FY, z]]); }
+  // asset stacks (one per category), coins as rings
+  const xs = [-1.8, -.9, 0, .9, 1.8], r = .3, tops = [];
+  sc.heights.forEach((h, k) => {
+    const x = xs[k], z = .1, ring = y => Array.from({length:22}, (_, i) => { const a = i / 22 * Math.PI * 2; return [x + Math.cos(a) * r, y, z + Math.sin(a) * r]; });
+    c.globalAlpha = .75;
+    for (let y = Y1; y <= Y1 + h + 1e-6; y += .09) poly(ring(y), true);
+    c.globalAlpha = .45;
+    for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + .4; poly([[x + Math.cos(a) * r, Y1, z + Math.sin(a) * r], [x + Math.cos(a) * r, Y1 + h, z + Math.sin(a) * r]]); }
+    tops.push([x, Y1 + h + .1, z]);
+  });
+  // goal octahedron
+  const G = [1.1, 5.5, 0], gs = .62 + .25 * sc.prog, spinO = reduce ? .6 : t * .5;
+  const oc = [[0, 1.25, 0], [0, -1.25, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map(([a, b, d]) => [G[0] + (a * Math.cos(spinO) - d * Math.sin(spinO)) * gs, G[1] + b * gs, G[2] + (a * Math.sin(spinO) + d * Math.cos(spinO)) * gs]);
+  c.globalAlpha = .85;
+  for (const [i, j] of [[0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5], [2, 4], [4, 3], [3, 5], [5, 2]]) poly([oc[i], oc[j]]);
+  c.globalAlpha = .3; poly([oc[0], oc[1]]); poly([oc[2], oc[3]]); poly([oc[4], oc[5]]);
+  // goal fill level: horizontal ring inside the octahedron at progress height
+  const gy = G[1] - 1.25 * gs + 2.5 * gs * sc.prog, wR = gs * (1 - Math.abs(gy - G[1]) / (1.25 * gs));
+  c.globalAlpha = .9; poly(Array.from({length:4}, (_, i) => { const a = i / 4 * Math.PI * 2 + spinO; return [G[0] + Math.cos(a) * wR, gy, G[2] + Math.sin(a) * wR]; }), true);
+  // dashed uplinks from the two tallest stacks to the goal, hexagons riding up
+  const order = sc.heights.map((h, i) => [h, i]).sort((a, b) => b[0] - a[0]).slice(0, 2).map(x => x[1]);
+  order.forEach((k, li) => {
+    const a = tops[k], b = [G[0] + (li ? .35 : -.35), G[1] - 1.25 * gs - .25, G[2]];
+    const pa = P(a), pb = P(b);
+    c.globalAlpha = .9; c.setLineDash([3, 4]); c.lineDashOffset = reduce ? 0 : t * 14; c.beginPath(); c.moveTo(pa[0], pa[1]); c.lineTo(pb[0], pb[1]); c.stroke(); c.setLineDash([]);
+    const ah = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]);
+    c.beginPath(); c.moveTo(pb[0], pb[1]); c.lineTo(pb[0] - 7 * Math.cos(ah - .45), pb[1] - 7 * Math.sin(ah - .45)); c.moveTo(pb[0], pb[1]); c.lineTo(pb[0] - 7 * Math.cos(ah + .45), pb[1] - 7 * Math.sin(ah + .45)); c.stroke();
+    for (let n = 0; n < 3; n++) {
+      const u = ((reduce ? .2 : t * sc.speed) + n / 3 + li * .17) % 1, e = .08 + u * .84;
+      const q = P([a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e]);
+      const hr = (5 + 7 * Math.sin(u * Math.PI)) * q[3] / unit;
+      c.globalAlpha = 1; c.fillStyle = bandBg; c.beginPath();
+      for (let i = 0; i < 6; i++) { const aa = Math.PI / 6 + i * Math.PI / 3; i ? c.lineTo(q[0] + Math.cos(aa) * hr, q[1] + Math.sin(aa) * hr) : c.moveTo(q[0] + Math.cos(aa) * hr, q[1] + Math.sin(aa) * hr); }
+      c.closePath(); c.fill(); c.stroke();
+      c.globalAlpha = .5; c.beginPath(); c.arc(q[0], q[1], hr * .35, 0, Math.PI * 2); c.stroke();
+    }
+  });
+  c.globalAlpha = 1;
+  // labels
+  c.font = `600 10px ${cssVar("--mono")}`; c.fillStyle = fg; c.globalAlpha = .7; c.textAlign = "center";
+  const gl = P([G[0], G[1] + 1.25 * gs + .35, G[2]]); c.fillText("GOAL " + compact(state.plan.goal).toUpperCase() + " · " + Math.round(sc.prog * 100) + "%", gl[0], gl[1]);
+  c.globalAlpha = 1;
+}
+function wireLoop(t) { if (wireVisible) drawWire(t); if (!reduce) requestAnimationFrame(wireLoop); }
+requestAnimationFrame(wireLoop);
+function renderBandCaption() { $("#capL").textContent = `Uplink ${money(state.plan.monthly)}/mo · ${state.plan.rate}%/yr`; $("#capR").textContent = `Goal ${compact(state.plan.goal)}`; }
+const menuToggle = open => { document.body.classList.toggle("menuOpen", open); $("#menuBtn").setAttribute("aria-expanded", open); };
+$("#menuBtn").onclick = () => menuToggle(!document.body.classList.contains("menuOpen"));
+$$("#menu a").forEach(a => a.addEventListener("click", () => menuToggle(false)));
+addEventListener("keydown", e => { if (e.key === "Escape") menuToggle(false); });
+
 /* ─────────── boot ─────────── */
-function renderAll() { syncPlanInputs(); syncPPInputs(); renderLedger(); renderOverview(); renderPlan(); renderPower(); renderMilestones(); renderTerms(); checkAchievements(); }
+function renderAll() { renderBandCaption(); syncPlanInputs(); syncPPInputs(); renderLedger(); renderOverview(); renderPlan(); renderPower(); renderMilestones(); renderTerms(); checkAchievements(); }
 renderAll(); nextCard(); renderChat();
-let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { renderOverview(); renderPlan(); renderPower(); drawOrbit(); }, 120); }).observe(document.body);
+let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { renderOverview(); renderPlan(); renderPower(); drawOrbit(); drawWire(); }, 120); }).observe(document.body);
 })();
 </script>
