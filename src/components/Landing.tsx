@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 
+// Show Google sign-in only once the provider is enabled in Supabase Auth (set VITE_ENABLE_GOOGLE=true).
+const GOOGLE_ENABLED = import.meta.env.VITE_ENABLE_GOOGLE === 'true';
+
 export function AuthForm() {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -45,6 +48,8 @@ export function AuthForm() {
       <button className="btn" type="submit" disabled={state === 'sending'}>
         {state === 'sending' ? 'Sending…' : 'Continue with email'}
       </button>
+      {GOOGLE_ENABLED && (
+        <>
       <div className="divider">or</div>
       <button
         className="btn ghost"
@@ -59,6 +64,8 @@ export function AuthForm() {
       >
         Continue with Google
       </button>
+        </>
+      )}
       {state === 'error' && <p className="note neg">{err}</p>}
       <p className="note" style={{ margin: 0 }}>
         No password needed. Your plan is private to your account.
