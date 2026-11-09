@@ -157,16 +157,28 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  const { data: auth, error } = await admin.auth.getUser(token);
-  if (error || !auth?.user) return json({ error: 'unauthorized' }, 401);
-
   let body: Record<string, unknown> = {};
   try {
     body = await req.json();
   } catch {
     /* empty body */
   }
+
+  // Macro data is public and cached (refetched at most twice a day), so it needs no user session.
+  // This also lets a scheduled job warm the cache.
+  if (body.action === 'macro') {
+    try {
+      return await macro();
+    } catch (e) {
+      console.error(e);
+      return json({ error: 'server_error' }, 500);
+    }
+  }
+
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  const { data: auth, error } = await admin.auth.getUser(token);
+  if (error || !auth?.user) return json({ error: 'unauthorized' }, 401);
+
   try {
     switch (body.action) {
       case 'quotes':
