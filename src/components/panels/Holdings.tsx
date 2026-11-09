@@ -46,7 +46,7 @@ export function Holdings({ onTrade }: { onTrade: () => void }) {
                 <th>Value</th>
                 <th>Day</th>
                 <th>Gain</th>
-                <th>Wt</th>
+                <th className="hide-xnarrow">Wt</th>
               </tr>
             </thead>
             <tbody>
@@ -71,7 +71,7 @@ export function Holdings({ onTrade }: { onTrade: () => void }) {
                   <td>{usd(h.marketValue)}</td>
                   <td className={tone(h.dayChangePct)}>{h.dayChangePct != null ? signedPct(h.dayChangePct / 100) : '—'}</td>
                   <td className={tone(h.unrealized)}>{h.costBasis > 0 ? signedPct(h.unrealized / h.costBasis, 1) : '—'}</td>
-                  <td>{summary.portfolio > 0 ? `${((h.marketValue / summary.portfolio) * 100).toFixed(1)}` : '—'}</td>
+                  <td className="hide-xnarrow">{summary.portfolio > 0 ? `${((h.marketValue / summary.portfolio) * 100).toFixed(1)}` : '—'}</td>
                 </tr>
               ))}
               <tr className="sub">
@@ -81,7 +81,7 @@ export function Holdings({ onTrade }: { onTrade: () => void }) {
                 <td>{usd(summary.cash)}</td>
                 <td />
                 <td />
-                <td>{summary.portfolio > 0 ? ((summary.cash / summary.portfolio) * 100).toFixed(1) : '—'}</td>
+                <td className="hide-xnarrow">{summary.portfolio > 0 ? ((summary.cash / summary.portfolio) * 100).toFixed(1) : '—'}</td>
               </tr>
               <tr className="total">
                 <td>Portfolio</td>
@@ -90,7 +90,7 @@ export function Holdings({ onTrade }: { onTrade: () => void }) {
                 <td>{usd(summary.portfolio)}</td>
                 <td className={tone(totalDay)}>{totalDay ? `${totalDay > 0 ? '+' : '−'}${usd(Math.abs(totalDay))}` : '—'}</td>
                 <td className={tone(summary.gains)}>{summary.netContributions > 0 ? signedPct(summary.gains / summary.netContributions, 1) : '—'}</td>
-                <td>100</td>
+                <td className="hide-xnarrow">100</td>
               </tr>
             </tbody>
           </table>

@@ -68,7 +68,7 @@ export function Allocation({ onAssumptions }: { onAssumptions: () => void }) {
         </table>
         <div className="stats" style={{ marginTop: 8, borderTop: 0 }}>
           <div className="stat">
-            <div className="label">Expected return</div>
+            <div className="label">Exp. return</div>
             <div className="v">{pct(m.stats.geo, 2)}</div>
           </div>
           <div className="stat">

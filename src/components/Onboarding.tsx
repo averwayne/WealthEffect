@@ -75,7 +75,9 @@ export function Onboarding() {
   };
 
   return (
-    <div className="landing" style={{ gridTemplateRows: 'auto 1fr' }}>
+    <div className="landing">
+      <div className="bezel">
+      <div className="device" style={{ gridTemplateRows: 'auto 1fr', overflow: 'visible' }}>
       <header className="masthead">
         <span className="label">Set up your plan</span>
         <div className="brand">Wealth Effect</div>
@@ -297,6 +299,8 @@ export function Onboarding() {
             </button>
           )}
         </div>
+      </div>
+      </div>
       </div>
     </div>
   );

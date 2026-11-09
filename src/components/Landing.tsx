@@ -71,6 +71,8 @@ export function Landing() {
   const enterDemo = useStore((s) => s.enterDemo);
   return (
     <div className="landing">
+      <div className="bezel">
+      <div className="device" style={{ gridTemplateRows: 'auto 1fr auto auto' }}>
       <header className="masthead" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
         <span className="label">Personal wealth planning</span>
         <div className="brand">Wealth Effect</div>
@@ -78,7 +80,7 @@ export function Landing() {
       </header>
       <div className="landing-grid">
         <div>
-          <div className="label wine">Plan · Invest · Track</div>
+          <div><span className="tag y">Plan</span> <span className="tag g">Invest</span> <span className="tag w">Track</span></div>
           <h1>One page for the decades it takes to build wealth.</h1>
           <p className="lede">
             Set a goal, choose an allocation grounded in a century of market history, and measure every month against a fixed target path, with live prices,
@@ -124,10 +126,12 @@ export function Landing() {
           <p>Your net worth percentile for your age from the Federal Reserve’s 2025 Survey of Consumer Finances, and the year you reach the next tier.</p>
         </div>
       </div>
-      <footer className="foot" style={{ height: 32 }}>
+      <footer className="foot">
         <span>For education and planning only. Not investment advice.</span>
         <span>© {new Date().getFullYear()} Wealth Effect</span>
       </footer>
+      </div>
+      </div>
     </div>
   );
 }

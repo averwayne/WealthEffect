@@ -44,8 +44,8 @@ export function Standing() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="label">Tier</div>
-            <div className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--wine)' }}>
-              {tier.label}
+            <div style={{ marginTop: 4 }}>
+              <span className="tag y">{tier.label}</span>
             </div>
           </div>
         </div>
@@ -54,7 +54,7 @@ export function Standing() {
           <div className="bar" style={{ height: 8 }}>
             <i style={{ width: `${p}%` }} />
             {TIERS.slice(1).map((t) => (
-              <span key={t.key} style={{ position: 'absolute', left: `${t.min}%`, top: -2, bottom: -2, width: 1, background: 'var(--paper)' }} />
+              <span key={t.key} style={{ position: 'absolute', left: `${t.min}%`, top: -2, bottom: -2, width: 2, background: 'var(--paper)' }} />
             ))}
           </div>
           <div className="mono muted" style={{ position: 'relative', height: 14, fontSize: 9.5, marginTop: 3 }}>
@@ -79,11 +79,11 @@ export function Standing() {
               const v = valueAtPercentile(q, band);
               const isNext = nextTier?.min === q;
               return (
-                <tr key={q} style={isNext ? { background: 'var(--wine-soft)' } : undefined}>
+                <tr key={q} style={isNext ? { background: 'rgba(245,210,64,0.07)' } : undefined}>
                   <td>
                     P{q}
                     {q === 50 ? ' · median' : ''}
-                    {isNext ? <span className="wine"> · next</span> : ''}
+                    {isNext ? <span style={{ color: 'var(--yellow)' }}> · next</span> : ''}
                   </td>
                   <td>{usd(v)}</td>
                   <td className={summary.netWorth >= v ? 'pos' : 'muted'}>{summary.netWorth >= v ? '✓' : usdc(v - summary.netWorth)}</td>
@@ -116,7 +116,7 @@ export function Standing() {
             </span>
           </div>
           <div className="bar" style={{ marginTop: 6 }}>
-            <i style={{ width: `${Math.min(100, fnPct * 100)}%`, background: 'var(--wine)' }} />
+            <i style={{ width: `${Math.min(100, fnPct * 100)}%`, background: 'var(--yellow)' }} />
           </div>
           <div className="note" style={{ marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
             <span>

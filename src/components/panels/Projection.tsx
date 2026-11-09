@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Area, Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { simulate, solveContribution, solveLength, solveRate, solveStart } from '../../lib/calc';
 import { monthsToText, pct, usd, usdc } from '../../lib/format';
+import { axisStyle, CT, tooltipStyle } from '../../lib/chartTheme';
 import { useM } from '../../lib/modelContext';
 import type { CalcInputs, CalcTab, Compounding } from '../../lib/types';
 import { NumField, Panel, Seg } from '../ui';
@@ -16,7 +17,6 @@ const TABS: { key: CalcTab; label: string }[] = [
 
 const COMPOUNDING: Compounding[] = ['annually', 'semiannually', 'quarterly', 'monthly', 'daily', 'continuously'];
 
-const axisStyle = { fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: '#7c7468' };
 
 export function Projection() {
   const m = useM();
@@ -186,9 +186,7 @@ export function Projection() {
         c.linked && m.mc?.probability != null ? (
           <span>
             Probability of reaching goal by age {settings.goalAge}:{' '}
-            <b className={m.mc.probability >= 0.75 ? 'pos' : m.mc.probability >= 0.5 ? '' : 'neg'} style={{ fontSize: 12 }}>
-              {Math.round(m.mc.probability * 100)}%
-            </b>
+            <span className={m.mc.probability >= 0.75 ? 'tag g' : m.mc.probability >= 0.5 ? 'tag y' : 'tag r'}>{Math.round(m.mc.probability * 100)}%</span>
           </span>
         ) : c.linked ? (
           'Simulating…'
@@ -207,7 +205,7 @@ export function Projection() {
       <div className="calc">
         <div className="calc-in">
           <label className="row" style={{ marginBottom: 4 }}>
-            <span className="label" style={{ color: 'var(--ink)' }}>
+            <span className="label" style={{ color: 'var(--ink-2)' }}>
               Use my plan
             </span>
             <span style={{ textAlign: 'right' }}>
@@ -294,7 +292,7 @@ export function Projection() {
               </div>
             ) : (
               <div className="legend">
-                <span><i style={{ background: '#b9ac99', height: 8 }} />Starting</span>
+                <span><i style={{ background: CT.dim, height: 8 }} />Starting</span>
                 <span><i style={{ background: 'var(--teal)', height: 8 }} />Contributions</span>
                 <span><i style={{ background: 'var(--wine)', height: 8 }} />Growth</span>
               </div>
@@ -310,36 +308,36 @@ export function Projection() {
             <ResponsiveContainer width="100%" height="100%">
               {showRange ? (
                 <ComposedChart data={rangeData} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
-                  <CartesianGrid stroke="#e3d9cb" vertical={false} />
-                  <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: '#b9ac99' }} interval="preserveStartEnd" minTickGap={28} />
+                  <CartesianGrid stroke={CT.grid} vertical={false} />
+                  <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: CT.axisLine }} interval="preserveStartEnd" minTickGap={28} />
                   <YAxis tick={axisStyle} tickLine={false} axisLine={false} tickFormatter={(v) => usdc(v)} width={56} />
                   <Tooltip
-                    contentStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11, background: '#f8f3ec', border: '1px solid #1b1915', borderRadius: 0 }}
+                    contentStyle={tooltipStyle}
                     formatter={(v: unknown, name?: unknown) => {
                       const label = name === 'band' ? 'P10–P90' : name === 'inner' ? 'P25–P75' : 'Median';
                       return [Array.isArray(v) ? `${usdc(v[0])} – ${usdc(v[1])}` : usdc(v as number), label];
                     }}
                     labelFormatter={(l) => `${l} · age ${m.age + (Number(l) - thisYear)}`}
                   />
-                  <Area dataKey="band" stroke="none" fill="var(--band)" isAnimationActive={false} />
-                  <Area dataKey="inner" stroke="none" fill="var(--band-2)" isAnimationActive={false} />
-                  <Line dataKey="p50" stroke="var(--teal)" strokeWidth={1.75} dot={false} isAnimationActive={false} />
-                  {goalLine != null && <ReferenceLine y={goalLine} stroke="var(--wine)" strokeDasharray="4 3" />}
-                  <ReferenceLine x={thisYear + m.yearsToGoal} stroke="var(--wine)" strokeOpacity={0.4} />
+                  <Area dataKey="band" stroke="none" fill={CT.band} isAnimationActive={false} />
+                  <Area dataKey="inner" stroke="none" fill={CT.band2} isAnimationActive={false} />
+                  <Line dataKey="p50" stroke={CT.ink} strokeWidth={1.75} dot={false} isAnimationActive={false} />
+                  {goalLine != null && <ReferenceLine y={goalLine} stroke={CT.red} strokeDasharray="4 3" />}
+                  <ReferenceLine x={thisYear + m.yearsToGoal} stroke={CT.red} strokeOpacity={0.4} />
                 </ComposedChart>
               ) : (
                 <ComposedChart data={barData} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
-                  <CartesianGrid stroke="#e3d9cb" vertical={false} />
-                  <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: '#b9ac99' }} minTickGap={16} />
+                  <CartesianGrid stroke={CT.grid} vertical={false} />
+                  <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: CT.axisLine }} minTickGap={16} />
                   <YAxis tick={axisStyle} tickLine={false} axisLine={false} tickFormatter={(v) => usdc(v)} width={56} />
                   <Tooltip
-                    contentStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11, background: '#f8f3ec', border: '1px solid #1b1915', borderRadius: 0 }}
+                    contentStyle={tooltipStyle}
                     formatter={(v: unknown, name?: unknown) => [usd(v as number), name === 'start' ? 'Starting' : name === 'contrib' ? 'Contributions' : 'Growth']}
                     labelFormatter={(l) => `Year ${l}`}
                   />
-                  <Bar dataKey="start" stackId="a" fill="#b9ac99" isAnimationActive={false} />
-                  <Bar dataKey="contrib" stackId="a" fill="var(--teal)" isAnimationActive={false} />
-                  <Bar dataKey="interest" stackId="a" fill="var(--wine)" isAnimationActive={false} />
+                  <Bar dataKey="start" stackId="a" fill={CT.dim} isAnimationActive={false} />
+                  <Bar dataKey="contrib" stackId="a" fill={CT.ink} isAnimationActive={false} />
+                  <Bar dataKey="interest" stackId="a" fill={CT.red} isAnimationActive={false} />
                 </ComposedChart>
               )}
             </ResponsiveContainer>

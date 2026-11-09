@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { monthKey, monthsBetween, signedPct, signedUsd, tone, usd, usdc } from '../../lib/format';
 import { targetPathValue } from '../../lib/model';
+import { axisStyle, CT, tooltipStyle } from '../../lib/chartTheme';
 import { useM } from '../../lib/modelContext';
 import { Panel } from '../ui';
 
-const axisStyle = { fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: '#7c7468' };
 
 export function Performance() {
   const m = useM();
@@ -72,15 +72,15 @@ export function Performance() {
       <div className="pb" style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: 6 }}>
         <div className="stats" style={{ borderTop: 0 }}>
           <div className="stat">
-            <div className="label">Target variance</div>
+            <div className="label">Variance</div>
             <div className={`v ${tone(m.variance)}`}>{m.variance != null ? signedUsd(m.variance, true) : '—'}</div>
           </div>
           <div className="stat">
-            <div className="label">Contributions</div>
+            <div className="label">Contributed</div>
             <div className="v">{usdc(summary.netContributions)}</div>
           </div>
           <div className="stat">
-            <div className="label">Market gains</div>
+            <div className="label">Gains</div>
             <div className={`v ${tone(summary.gains)}`}>{signedUsd(summary.gains, true)}</div>
           </div>
           <div className="stat" title="Money-weighted return (XIRR) on your deposits and withdrawals">
@@ -104,16 +104,16 @@ export function Performance() {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e3d9cb" vertical={false} />
-                <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: '#b9ac99' }} minTickGap={36} />
+                <CartesianGrid stroke={CT.grid} vertical={false} />
+                <XAxis dataKey="x" tick={axisStyle} tickLine={false} axisLine={{ stroke: CT.axisLine }} minTickGap={36} />
                 <YAxis tick={axisStyle} tickLine={false} axisLine={false} tickFormatter={(v) => usdc(v)} width={56} />
                 <Tooltip
-                  contentStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 11, background: '#f8f3ec', border: '1px solid #1b1915', borderRadius: 0 }}
+                  contentStyle={tooltipStyle}
                   formatter={(v: unknown, name?: unknown) => [usd(v as number), name === 'actual' ? 'Portfolio' : name === 'target' ? 'Target path' : 'Contributions']}
                 />
-                <Line dataKey="contrib" stroke="#b9ac99" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls />
-                <Line dataKey="target" stroke="var(--wine)" strokeWidth={1.25} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
-                <Line dataKey="actual" stroke="var(--ink)" strokeWidth={1.75} dot={false} isAnimationActive={false} connectNulls />
+                <Line dataKey="contrib" stroke={CT.dim} strokeWidth={1} dot={false} isAnimationActive={false} connectNulls />
+                <Line dataKey="target" stroke={CT.red} strokeWidth={1.25} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
+                <Line dataKey="actual" stroke={CT.ink} strokeWidth={1.75} dot={false} isAnimationActive={false} connectNulls />
               </ComposedChart>
             </ResponsiveContainer>
           )}
@@ -121,7 +121,7 @@ export function Performance() {
         <div className="legend" style={{ marginTop: 4 }}>
           <span><i style={{ background: 'var(--ink)' }} />Portfolio</span>
           <span><i style={{ background: 'var(--wine)' }} />Target path</span>
-          <span><i style={{ background: '#b9ac99' }} />Net contributions</span>
+          <span><i style={{ background: CT.dim }} />Net contributions</span>
           <span style={{ marginLeft: 'auto' }}>
             {r.since ? `Since ${r.since}` : ''}
             {!b && m.s.mode === 'cloud' ? ' · Benchmark pending market data' : ''}
